@@ -1,0 +1,25 @@
+<!DOCTYPE ui:UiBinder SYSTEM "http://dl.google.com/gwt/DTD/xhtml.ent">
+<ui:UiBinder xmlns:ui="urn:ui:com.google.gwt.uibinder"
+	xmlns:g="urn:import:com.google.gwt.user.client.ui">
+	<ui:style>
+		
+	</ui:style>
+	<g:HTMLPanel ui:field="elMain" styleName="container">	   
+	   <div class="row">	       
+	       <div class="span12">	       	           
+	           <div class="cp-w">
+	               <span ui:field="elCaption" class="cp">Наши фотки</span>
+	               <span ui:field="elFolder" class="cp-fld-n"></span>
+	               <span ui:field="elCountDetails" class="cp-fld-cd"></span>
+	               <span ui:field="elCount" class="cp-fld-c"></span>	               
+	           </div>
+	           <ul class="sf-w" ui:field="elSmallPhotosW"></ul>
+	           <div class="bf-w" ui:field="elBigPhotoW"></div>	                     	           	      
+	       </div>
+	       <div class="span12 bottom">
+                Created by sergey@sinica.me
+           </div>	       
+	   </div>
+	   
+	</g:HTMLPanel>
+</ui:UiBinder> 

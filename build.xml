@@ -1,0 +1,128 @@
+<project name="ssgallery" basedir="." default="build">
+
+	<property name="project.dir" location="." />
+	<property name="build.dir" location="${project.dir}\build" />
+	<property name="gwt.sdk" location="C:\my\soft\gwt-2.4.0" />
+	<property file="${basedir}/build.properties" />
+
+	<target name="build" depends="clean,create-build-dir,copy-resources,compile,remove-gwt-classes-from-classes,create-jar,compile-gwt,clean-after-build">
+
+	</target>
+
+	<target name="clean" description="Cleans build directory">
+		<delete dir="${build.dir}">
+		</delete>
+	</target>
+
+	<target name="create-build-dir">
+		<mkdir dir="${build.dir}">
+		</mkdir>
+		<mkdir dir="${build.dir}/logs">
+		</mkdir>
+	</target>
+
+	<target name="copy-resources">
+		<copy todir="${build.dir}/war">
+			<fileset dir="${project.dir}/war">
+				<exclude name="gallery/**" />
+				<exclude name="WEB-INF/**" />
+			</fileset>
+		</copy>
+		<copy todir="${build.dir}/lib">
+			<fileset dir="${project.dir}/lib">
+			</fileset>
+		</copy>
+		<copy todir="${build.dir}/conf">
+			<fileset dir="${project.dir}/conf-ubuntu">
+			</fileset>
+		</copy>
+		<copy todir="${build.dir}/launch">
+			<fileset dir="${project.dir}/launch">
+			</fileset>
+		</copy>
+		<copy todir="${build.dir}">
+			<fileset dir="${project.dir}">
+				<include name="ssgallery.bat" />
+			</fileset>
+		</copy>
+	</target>
+
+	<path id="project.classpath">
+		<pathelement path="${build.dir}/classes" />
+		<fileset dir="${build.dir}/lib">
+			<include name="**/*.jar" />
+		</fileset>
+		<pathelement location="${gwt.sdk}/gwt-user.jar" />
+		<fileset dir="${gwt.sdk}" includes="gwt-dev*.jar" />
+	</path>
+
+	<target name="compile" description="Compiles Java source">
+		<copy todir="${build.dir}/classes">
+			<fileset dir="${project.dir}/src">
+				<exclude name="**/*.java" />
+				<exclude name="**/*ui.xml" />
+				<exclude name="**/*gwt.xml" />
+			</fileset>
+		</copy>
+		<javac srcdir="${project.dir}/src" destdir="${build.dir}/classes" classpathref="project.classpath" debug="on" encoding="utf-8" source="1.6" target="1.6" failonerror="true" />
+	</target>
+
+	<target name="create-jar">
+		<jar destfile="${build.dir}/lib/ssgallery-${build.number}.jar" basedir="${build.dir}/classes">
+		</jar>
+	</target>
+
+	<target name="remove-gwt-classes-from-classes">
+		<delete dir="${build.dir}/classes/com/ss/gallery/client">
+		</delete>
+	</target>
+
+	<target name="compile-gwt">
+		<antcall target="compile-gwt-impl">
+			<param name="module.name" value="com.ss.gallery.Gallery" />
+		</antcall>
+	</target>
+
+	<target name="compile-gwt-impl">
+
+		<path id="gwt.classpath.ref">
+			<fileset dir="${gwt.sdk}" includes="*.jar" />
+			<pathelement path="${project.dir}/src" />
+			<pathelement path="${build.dir}/classes" />
+		</path>
+
+		<property name="gwt.classpath" refid="gwt.classpath.ref" />
+		<echo message="gwt.classpath = ${gwt.classpath}" />
+
+		<java fork="yes" classname="com.google.gwt.dev.Compiler" failonerror="true">
+			<classpath refid="gwt.classpath.ref" />
+
+			<jvmarg value="-Xms512m" />
+			<jvmarg value="-Xmx1024m" />
+			<arg value="-style" />
+			<arg value="OBF" />
+			<arg value="-localWorkers" />
+			<arg value="3" />
+			<arg value="-war" />
+			<arg value="${build.dir}/war" />
+			<!--<arg line="${int.gwt-compile-report}" />-->
+			<!--<arg value="-compileReport"/>-->
+			<!--<arg value="-extra"/>-->
+			<!--<arg value="${root.dir}\web\tmp"/>-->
+			<!--<arg value="-XdisableCastChecking" />-->
+			<!--<arg value="-XdisableClassMetadata" />-->
+			<!--<arg value="-logLevel" />
+			<arg value="DEBUG" />-->
+			<!--<arg line="${int.gwt-draft-compile}" />-->
+			<arg value="${module.name}" />
+		</java>
+	</target>
+
+	<target name="clean-after-build">
+		<delete dir="${build.dir}/classes">
+		</delete>
+		<delete dir="${build.dir}/gwt-unitCache">
+		</delete>
+	</target>
+
+</project>
