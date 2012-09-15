@@ -1,6 +1,6 @@
-#Mon Sep 10 21:33:00 EEST 2012
+#Sat Sep 15 16:32:09 EEST 2012
 eclipse.preferences.version=1
-encoding//conf-ubuntu/ssgallery.properties=UTF-8
-encoding//conf/ssgallery.properties=UTF-8
+encoding//conf/dev/ssgallery.properties=UTF-8
+encoding//conf/prod/ssgallery.properties=UTF-8
 encoding//src/com/ss/gallery/client/GalleryPanel.java=UTF-8
 encoding//src/com/ss/gallery/server/GalleryServiceImpl.java=UTF-8

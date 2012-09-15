@@ -4,3 +4,4 @@
 /.gwt-tmp/
 /war/WEB-INF/classes/
 /war/WEB-INF/deploy/
+/conf/prod/

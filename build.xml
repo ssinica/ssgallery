@@ -4,10 +4,17 @@
 	<property name="build.dir" location="${project.dir}\build" />
 	<property name="gwt.sdk" location="C:\my\soft\gwt-2.4.0" />
 	<property file="${basedir}/build.properties" />
+	<property name="conf.prod.dir" location="${project.dir}\conf\prod" />
+	<property name="conf.example.dir" location="${project.dir}\conf\example" />
 
-	<target name="build" depends="clean,create-build-dir,copy-resources,compile,remove-gwt-classes-from-classes,create-jar,compile-gwt,clean-after-build">
+	<target name="build" depends="clean,create-build-dir,copy-resources,copy-example-conf,compile,remove-gwt-classes-from-classes,create-jar,compile-gwt,clean-after-build">
 
 	</target>
+
+	<target name="build-prod" depends="clean,create-build-dir,copy-resources,copy-prod-conf,compile,remove-gwt-classes-from-classes,create-jar,compile-gwt,clean-after-build">
+
+	</target>
+
 
 	<target name="clean" description="Cleans build directory">
 		<delete dir="${build.dir}">
@@ -21,6 +28,20 @@
 		</mkdir>
 	</target>
 
+	<target name="copy-prod-conf">
+		<copy todir="${build.dir}/conf">
+			<fileset dir="${conf.prod.dir}">
+			</fileset>
+		</copy>
+	</target>
+
+	<target name="copy-example-conf">
+		<copy todir="${build.dir}/conf">
+			<fileset dir="${conf.example.dir}">
+			</fileset>
+		</copy>
+	</target>
+
 	<target name="copy-resources">
 		<copy todir="${build.dir}/war">
 			<fileset dir="${project.dir}/war">
@@ -30,10 +51,6 @@
 		</copy>
 		<copy todir="${build.dir}/lib">
 			<fileset dir="${project.dir}/lib">
-			</fileset>
-		</copy>
-		<copy todir="${build.dir}/conf">
-			<fileset dir="${project.dir}/conf-ubuntu">
 			</fileset>
 		</copy>
 		<copy todir="${build.dir}/launch">
