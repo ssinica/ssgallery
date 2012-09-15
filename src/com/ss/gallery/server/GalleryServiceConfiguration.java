@@ -1,9 +1,10 @@
 package com.ss.gallery.server;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.commons.configuration.PropertiesConfiguration;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -12,7 +13,7 @@ public class GalleryServiceConfiguration {
 	private static final Log log = LogFactory.getLog(GalleryServiceConfiguration.class);
 
 	private PropertiesConfiguration pc;
-	private Set<DirectoryConfig> directories = new HashSet<DirectoryConfig>();
+	private List<DirectoryConfig> directories = new ArrayList<DirectoryConfig>();
 	private int threads = 3;
 	private String thumbDir;
 	private int thumbSize;
@@ -21,6 +22,7 @@ public class GalleryServiceConfiguration {
 	private String war;
 	private int imagesChunkSize;
 	private int httpPort;
+	private int folderImagesCount;
 
 	public GalleryServiceConfiguration(PropertiesConfiguration pc) {
 		this.pc = pc;
@@ -29,12 +31,6 @@ public class GalleryServiceConfiguration {
 
 	private void loadProperties() {
 		try {
-
-			String[] paths = pc.getStringArray("app.paths");
-			for (String path : paths) {
-				directories.add(DirectoryConfig.parse(path));
-			}
-
 			threads = pc.getInt("app.threads", 3);
 			thumbDir = pc.getString("app.thumb.dir", "thumbs");
 			thumbSize = pc.getInt("app.thumb.size", 180);
@@ -43,12 +39,35 @@ public class GalleryServiceConfiguration {
 			war = pc.getString("app.war", "/");
 			imagesChunkSize = pc.getInt("app.images.chunk.size", 6);
 			httpPort = pc.getInt("app.http.port", 8080);
+			folderImagesCount = pc.getInt("app.folder.images.count", 7);
+
+			parseDirectories();
 		} catch (Exception e) {
-			log.warn("Failed to parse gallery service configuration. Default values will be used", e);
+			log.error("Failed to parse gallery service configuration. Default values will be used", e);
 		}
 	}
 
-	public Set<DirectoryConfig> getPaths() {
+	private static final String APP_DIR_PREFIX = "app.dir.";
+	private static final String APP_DIR_DESCRIPTION = ".caption";
+
+	private void parseDirectories() {
+		int currentIndex = 1;
+		while (true) {
+			String pathProp = APP_DIR_PREFIX + currentIndex;
+			String path = pc.getString(APP_DIR_PREFIX + currentIndex, "");
+			if (StringUtils.isEmpty(path)) {
+				break;
+			}
+			String caption = pc.getString(pathProp + APP_DIR_DESCRIPTION, "");
+
+			DirectoryConfig dc = new DirectoryConfig(path, caption);
+			directories.add(dc);
+
+			currentIndex++;
+		}
+	}
+
+	public List<DirectoryConfig> getPaths() {
 		return directories;
 	}
 
@@ -82,5 +101,9 @@ public class GalleryServiceConfiguration {
 
 	public int getHttpPort() {
 		return httpPort;
+	}
+
+	public int getFolderImagesCount() {
+		return folderImagesCount;
 	}
 }

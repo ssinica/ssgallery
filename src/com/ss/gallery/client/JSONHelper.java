@@ -122,7 +122,7 @@ public class JSONHelper {
 	public static List<Integer> getIntegers(JSONObject json, String param) {
 		List<Integer> res = getArray(json, param, new ValueParser<Integer>() {
 			@Override
-			public Integer parse(JSONObject json) {
+			public Integer parse(JSONValue json) {
 				JSONNumber value = json.isNumber();
 				if (value == null) {
 					return null;
@@ -130,6 +130,20 @@ public class JSONHelper {
 				double d = value.doubleValue();
 				int v = Double.valueOf(d).intValue();
 				return Integer.valueOf(v);
+			}
+		});
+		return res;
+	}
+
+	public static List<String> getStrings(JSONObject json, String param) {
+		List<String> res = getArray(json, param, new ValueParser<String>() {
+			@Override
+			public String parse(JSONValue json) {
+				JSONString s = json.isString();
+				if (s == null) {
+					return null;
+				}
+				return s.stringValue();
 			}
 		});
 		return res;
@@ -150,7 +164,7 @@ public class JSONHelper {
 	public static List<Long> getLongs(JSONObject json, String param) {
 		List<Long> res = getArray(json, param, new ValueParser<Long>() {
 			@Override
-			public Long parse(JSONObject json) {
+			public Long parse(JSONValue json) {
 				JSONString stringValue = json.isString();
 				if (stringValue == null) {
 					return null;
@@ -183,12 +197,9 @@ public class JSONHelper {
 		for (int i = 0; i < array.size(); i++) {
 			JSONValue item = array.get(i);
 			if (item != null) {
-				JSONObject obj = item.isObject();
-				if (obj != null) {
-					RESULT r = valueParser.parse(obj);
-					if (r != null) {
-						res.add(r);
-					}
+				RESULT r = valueParser.parse(item);
+				if (r != null) {
+					res.add(r);
 				}
 			}
 		}
@@ -205,12 +216,9 @@ public class JSONHelper {
 		for (int i = 0; i < array.size(); i++) {
 			JSONValue item = array.get(i);
 			if (item != null) {
-				JSONObject obj = item.isObject();
-				if (obj != null) {
-					RESULT r = valueParser.parse(obj);
-					if (r != null) {
-						res.add(r);
-					}
+				RESULT r = valueParser.parse(item);
+				if (r != null) {
+					res.add(r);
 				}
 			}
 		}
@@ -218,6 +226,6 @@ public class JSONHelper {
 	}
 
 	public static interface ValueParser<RESULT> {
-		RESULT parse(JSONObject json);
+		RESULT parse(JSONValue json);
 	}
 }

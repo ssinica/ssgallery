@@ -2,7 +2,6 @@ package com.ss.gallery.server;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
-import org.apache.commons.configuration.reloading.FileChangedReloadingStrategy;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.eclipse.jetty.server.Server;
@@ -49,9 +48,12 @@ public class GalleryServer implements WrapperListener {
 	}
 
 	private void initContext() throws ConfigurationException {
-		PropertiesConfiguration pc = new PropertiesConfiguration(PROPERTIES_FILE_NAME);
+		PropertiesConfiguration pc = new PropertiesConfiguration();
+		pc.setDelimiterParsingDisabled(false);
 		pc.setEncoding("UTF-8");
-		pc.setReloadingStrategy(new FileChangedReloadingStrategy());
+		pc.load(PROPERTIES_FILE_NAME);
+
+		// pc.setReloadingStrategy(new FileChangedReloadingStrategy());
 		ctx = new GalleryContext(pc);
 	}
 

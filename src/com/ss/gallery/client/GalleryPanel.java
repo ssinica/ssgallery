@@ -16,11 +16,13 @@ import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.json.client.JSONObject;
 import com.google.gwt.json.client.JSONParser;
+import com.google.gwt.json.client.JSONValue;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.History;
+import com.google.gwt.user.client.Random;
 import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Composite;
@@ -187,7 +189,8 @@ public class GalleryPanel extends Composite implements
 		// parse images
 		List<ClientImage> images = JSONHelper.getArray(jsonObj, "images", new ValueParser<ClientImage>() {
 			@Override
-			public ClientImage parse(JSONObject json) {
+			public ClientImage parse(JSONValue jsonValue) {
+				JSONObject json = jsonValue.isObject();
 				String id = JSONHelper.getString(json, "id");
 				return new ClientImage(id);
 			}
@@ -207,7 +210,7 @@ public class GalleryPanel extends Composite implements
 			return;
 		}
 		String folderCaption = JSONHelper.getString(folderJson, "caption");
-		selectedFolder = new ClientFolder(folderId, folderCaption);
+		selectedFolder = new ClientFolder(folderId, folderCaption, null);
 
 		if (GWTUtils.isEmpty(selectedImageId)) {
 			selectedImageId = loadedImages.get(0).getId();
@@ -239,7 +242,10 @@ public class GalleryPanel extends Composite implements
 		clearBigPhotoWrapper();
 		String bigPhotoSrc = "<img src='" + GalleryClientUtils.genMediumImageSrc(folderId, selectedImageId) + "'></img>";
 		bigPhotoSrc += "<div class='bf-down-w'>";
-			bigPhotoSrc += "<a class='bf-down' href='" + GalleryClientUtils.genLargeImageSrc(folderId, selectedImageId) + "'>скачать в полном размере</a>";
+		bigPhotoSrc += "<a class='bf-down' href='"
+				+ GalleryClientUtils
+						.genLargeImageSrc(folderId, selectedImageId)
+ + "'>скачать в полном размере</a>";
 		bigPhotoSrc += "</div>";
 		final String bigPhotoHtml = bigPhotoSrc;
 		new Timer() {
@@ -260,13 +266,13 @@ public class GalleryPanel extends Composite implements
 				boolean last = navigateRight;
 				smallImagesHtml += genSmallImageHtml(folderId, image, last, navigateLeft, navigateRight);
 			}
-			elSmallPhotosW.setInnerHTML("");
+			setSmallPhotosHtml("", true);
 			elBigPhotoW.removeClassName(CSS_SMALL_PHOTOS_ANIME);
 			final String resHtml = smallImagesHtml;
 			new Timer() {
 				@Override
 				public void run() {
-					elSmallPhotosW.setInnerHTML(resHtml);
+					setSmallPhotosHtml(resHtml, true);
 					elSmallPhotosW.addClassName(CSS_SMALL_PHOTOS_ANIME);
 					updateSelectedImageAndNavigation(selectedImageId);
 				}
@@ -379,14 +385,48 @@ public class GalleryPanel extends Composite implements
 		return "sfwid-" + imageId;
 	}
 
+	private String[] zindexes = new String[] { "i-z-100", "i-z-200", "i-z-300", "i-z-400" };
+	private Integer[] tops = new Integer[] { 21, 25, 35, 45 };
+	private Integer[] lefts = new Integer[] { 20, 40, 60 };
+	private String[] d = new String[] { "15", "20", "32" };
+	private String[] turns = new String[] { "i-rotate-r-", "i-rotate-l-" };
+	
+	private String genFolderImage(String imageId, String folderId) {
+
+		String z = zindexes[Random.nextInt(zindexes.length)];
+		Integer top = tops[Random.nextInt(tops.length)];
+		Integer left = lefts[Random.nextInt(lefts.length)];
+		String degree = d[Random.nextInt(d.length)];
+		String turn = turns[Random.nextInt(turns.length)];
+
+		String className = "i " + z + " " + turn + degree;
+
+		String src = GalleryClientUtils.genSmallImageSrc(folderId, imageId);
+		return "<img class='" + className + "' src='" + src + "' style='top:" + top + "px;left:" + left + "px;'></img>";
+	}
+
 	private String genFolderHtml(ClientFolder folder) {
-		String dq = new DataQueryJsonBuilder().add("folderId", folder.getId()).toDataQuery();
+
+		String folderId = folder.getId();
+		
+		String imagesHtml = "";
+		List<String> images = folder.getRandomImagesList();
+		if (!GWTUtils.isEmpty(images)) {
+			for (int i = 0; i < images.size(); i++) {
+				imagesHtml += genFolderImage(images.get(i), folderId);
+			}
+		}
+
+		String dq = new DataQueryJsonBuilder().add("folderId", folderId).toDataQuery();
 		String uidAndDq = GWTUtils.genUid(UID_FOLDER_CLICK) + " " + dq;
 		String html = "";
 		html += "<li class='sf-item' " + uidAndDq + ">";
 			html += "<div class='folder'>";
-				html += GWTUtils.safeString(folder.getCaption());
-			html += "<div>";
+				html += "<div class='folder-caption'>";
+					html += "<span class='folder-caption-l'>" + GWTUtils.safeString(folder.getCaption()) + "</span>";
+				html += "</div>";
+				html += imagesHtml;
+			html += "</div>";
 		html += "</li>";
 		return html;
 	}	
@@ -445,17 +485,28 @@ public class GalleryPanel extends Composite implements
 		// paint folders list
 		List<ClientFolder> folders = JSONHelper.getArray(json, "data", new ValueParser<ClientFolder>() {
 			@Override
-			public ClientFolder parse(JSONObject json) {
+			public ClientFolder parse(JSONValue jsonValue) {
+				JSONObject json = jsonValue.isObject();
 				String caption = JSONHelper.getString(json, "caption");
 				String id = JSONHelper.getString(json, "id");
-				ClientFolder f = new ClientFolder(id, caption);
+				List<String> randomImagesIds = JSONHelper.getStrings(json, "images");
+
+				ClientFolder f = new ClientFolder(id, caption, randomImagesIds);
 				return f;
 			}
 		});
-		elSmallPhotosW.setInnerHTML("");
 		String html = "";
 		for (ClientFolder folder : folders) {
 			html += genFolderHtml(folder);
+		}
+		setSmallPhotosHtml(html, false);
+	}
+
+	private void setSmallPhotosHtml(String html, boolean center) {
+		if (center) {
+			elSmallPhotosW.addClassName("sf-w__center");
+		} else {
+			elSmallPhotosW.removeClassName("sf-w__center");
 		}
 		elSmallPhotosW.setInnerHTML(html);
 	}

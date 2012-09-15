@@ -1,13 +1,17 @@
 package com.ss.gallery.client;
 
+import java.util.List;
+
 public class ClientFolder {
 
 	private String caption;
 	private String id;
+	private List<String> randomImagesList;
 
-	public ClientFolder(String id, String caption) {
+	public ClientFolder(String id, String caption, List<String> randomImagesIds) {
 		this.id = id;
 		this.caption = caption;
+		this.randomImagesList = randomImagesIds;
 	}
 
 	public String getCaption() {
@@ -24,6 +28,10 @@ public class ClientFolder {
 
 	public void setId(String id) {
 		this.id = id;
+	}
+
+	public List<String> getRandomImagesList() {
+		return randomImagesList;
 	}
 
 	public boolean equals(Object obj) {

@@ -2,7 +2,6 @@ package com.ss.gallery.server;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
 import javax.imageio.ImageIO;
@@ -82,7 +81,9 @@ public class CreateThumbsTask implements Runnable {
 	}
 
 	private boolean createThumb(File jpeg, File thumbsDir, int width) {
+		String jpegPath = "";
 		try {
+			jpegPath = jpeg.getPath();
 			BufferedImage image = ImageIO.read(jpeg);
 			BufferedImage thumb = Scalr.resize(image, width);
 			String thumbPath = FilenameUtils.concat(thumbsDir.getPath(), jpeg.getName());
@@ -90,8 +91,8 @@ public class CreateThumbsTask implements Runnable {
 			ImageIO.write(thumb, "jpeg", f);
 			log.debug("Thumb " + thumbPath + " created!");
 			return true;
-		} catch (IOException e) {
-			log.error("Filed to create thumb.", e);
+		} catch (Exception e) {
+			log.error("Filed to create thumb for file: " + jpegPath, e);
 			return false;
 		}
 

@@ -112,11 +112,21 @@ public class ApiServlet extends HttpServlet {
 
 	private void processWelcome(JsonObject json, HttpServletRequest req, HttpServletResponse resp) throws IOException {
 		Set<ServerFolder> folders = gs.listFolders();
+		int collageImagesCount = ctx.getConfig().getFolderImagesCount();
 		List<HashMap<String, Object>> responseData = new ArrayList<HashMap<String,Object>>();
 		for (ServerFolder folder : folders) {
+
+			List<ServerImage> images = gs.getRandomImagesFrom(folder, collageImagesCount);
+			List<String> imagesJsonData = new ArrayList<String>(images.size());
+			for (ServerImage img : images) {
+				imagesJsonData.add(img.getId());
+			}
+
 			HashMap<String, Object> folderData = new HashMap<String, Object>();
 			folderData.put("caption", folder.getCaption());
 			folderData.put("id", folder.getId());
+			folderData.put("images", imagesJsonData);
+
 			responseData.add(folderData);
 		}
 

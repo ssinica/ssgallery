@@ -5,11 +5,13 @@ public class ServerFolder implements Comparable<ServerFolder> {
 	private String caption;
 	private String path;
 	private String id;
+	private int position = 0;
 
-	public ServerFolder(String id, String caption, String path) {
+	public ServerFolder(String id, String caption, String path, int position) {
 		this.caption = caption;
 		this.path = path;
 		this.id = id;
+		this.position = position;
 	}
 
 	public void setPath(String path) {
@@ -56,12 +58,22 @@ public class ServerFolder implements Comparable<ServerFolder> {
 
 	@Override
 	public String toString() {
-		return "{" + caption + "}";
+		return "{" + path + "}";
 	}
 
 	@Override
 	public int compareTo(ServerFolder o) {
-		return caption.compareToIgnoreCase(o.getCaption());
+		if (position < o.getPosition()) {
+			return -1;
+		} else if (position == o.getPosition()) {
+			return 0;
+		} else {
+			return 1;
+		}
+	}
+
+	public int getPosition() {
+		return position;
 	}
 
 }

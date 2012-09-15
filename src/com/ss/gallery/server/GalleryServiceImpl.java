@@ -7,6 +7,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.NoSuchElementException;
+import java.util.Random;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -18,10 +19,10 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.LogFactory;
 
-
 public class GalleryServiceImpl implements GalleryService {
 	
-	private static final org.apache.commons.logging.Log log = LogFactory.getLog(GalleryServiceImpl.class);	
+	private static final org.apache.commons.logging.Log log = LogFactory.getLog(GalleryServiceImpl.class);
+	private static Random RANDOM = new Random();
 	
 	private ExecutorService executor;
 	private GalleryContext ctx;
@@ -183,6 +184,27 @@ public class GalleryServiceImpl implements GalleryService {
 		return Collections.emptySet();
 	}
 
+	@Override
+	public List<ServerImage> getRandomImagesFrom(ServerFolder folder, int count) {
+		TreeSet<ServerImage> images = data.get(folder);
+		if (images == null) {
+			return Collections.emptyList();
+		}
+
+		int size = images.size();
+		if (size < count) {
+			return new ArrayList<ServerImage>(images);
+		}
+
+		ServerImage[] array = images.toArray(new ServerImage[size]);
+		List<ServerImage> res = new ArrayList<ServerImage>(count);
+		for (int i = 0; i < count; i++) {
+			int idx = RANDOM.nextInt(size);
+			res.add(array[idx]);
+		}
+		return res;
+	}
+
 	// -----------------------------------------------------------------
 
 	private ServerFolder getFolderByIdImpl(String id) {
@@ -211,9 +233,9 @@ public class GalleryServiceImpl implements GalleryService {
 	private void buildModel() {
 		long start = System.nanoTime();
 		log.info("Building folder model...");
-		Set<DirectoryConfig> paths = config.getPaths();
-		for (DirectoryConfig path : paths) {
-			reloadFolder(path);
+		List<DirectoryConfig> paths = config.getPaths();
+		for (int i = 0; i < paths.size(); i++) {
+			reloadFolder(paths.get(i), i);
 		}
 		
 		Iterator<Entry<ServerFolder, TreeSet<ServerImage>>> it = data.entrySet().iterator();
@@ -226,7 +248,7 @@ public class GalleryServiceImpl implements GalleryService {
 	}
 
 	private void createThumbsIfRequired() {
-		Set<DirectoryConfig> paths = config.getPaths();
+		List<DirectoryConfig> paths = config.getPaths();
 		String thumbDir = config.getThumbDir();
 		int thumbSize = config.getThumbSize();
 		String viewDir = config.getViewDir();
@@ -236,7 +258,7 @@ public class GalleryServiceImpl implements GalleryService {
 		}
 	}
 
-	private void reloadFolder(DirectoryConfig folderConfig) {
+	private void reloadFolder(DirectoryConfig folderConfig, int position) {
 		File folder = GalleryUtils.getDir(folderConfig.getPath());
 		if (folder == null) {
 			return;
@@ -245,7 +267,7 @@ public class GalleryServiceImpl implements GalleryService {
 		String folderName = folder.getName();
 		String id = GalleryUtils.genId(folderName);		
 		String folderCaption = StringUtils.isEmpty(folderConfig.getCaption()) ? folderName : folderConfig.getCaption();		
-		ServerFolder gf = new ServerFolder(id, folderCaption, folder.getPath());
+		ServerFolder gf = new ServerFolder(id, folderCaption, folder.getPath(), position);
 
 		String thumbDir = config.getThumbDir();
 		String viewDir = config.getViewDir();

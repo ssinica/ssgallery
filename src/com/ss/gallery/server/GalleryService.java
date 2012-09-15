@@ -1,5 +1,6 @@
 package com.ss.gallery.server;
 
+import java.util.List;
 import java.util.Set;
 
 
@@ -18,5 +19,7 @@ public interface GalleryService {
 	ImagesChunk loadNextImagesChunk(String folderId, String startImageId);
 
 	ImagesChunk loadPrevImagesChunk(String folderId, String startImageId);
+
+	List<ServerImage> getRandomImagesFrom(ServerFolder folder, int count);
 
 }

@@ -30,10 +30,27 @@ body {
 		padding-right: 30px;
 		cursor: pointer;
 		}
-		.cp:hover {
-		   color: #999;
+		.cp:hover {		  
 		   text-decoration: underline;
 		   }
+    .cp-pre1 {
+        color: gold;
+        letter-spacing: -16px;
+        }   
+    .cp-pre2 {
+        color: yellow;
+        letter-spacing: -10px;
+        }        
+    .cp-post {
+        letter-spacing: 10px;
+        }
+    .cp:hover .cp-pre1 {
+        color: yellow;
+        }        
+    .cp:hover .cp-pre2 {
+        color: gold;
+        }
+        
 	.cp-fld-n {
 		font-size: 22px;
 		color: #999;
@@ -93,9 +110,11 @@ body {
 /* Small photos */
 
 .sf-w {	
-	margin: 0px; /* reset bootstrap default values */
-	text-align: center;		
-	}	
+	margin: 0px; /* reset bootstrap default values */		
+	}
+	.sf-w__center {
+	   text-align: center;
+	   }	
 				
 .sf-item {
     position: relative;
@@ -131,21 +150,137 @@ body {
 /* Folder */
 
 .folder {
-    width: 120px;
-    height: 150px;
-    background-color: yellow;
+    width: 180px;
+    height: 190px;    
     cursor: pointer;
-    text-align: center;	
-    color: #999;
-    font-size: 16px;
-    font-weight: bold;
-    vertical-align: middle;
-    border: 1px solid #666;
+    text-align: center;	        
+    position: relative;    
+    
+    -moz-border-radius-topleft: 5px;
+    -moz-border-radius-topright:5px;
+    -moz-border-radius-bottomleft:5px;
+    -moz-border-radius-bottomright:5px;
+    -webkit-border-top-left-radius:5px;
+    -webkit-border-top-right-radius:5px;
+    -webkit-border-bottom-left-radius:5px;
+    -webkit-border-bottom-right-radius:5px;
+    border-top-left-radius:5px;
+    border-top-right-radius:5px;
+    border-bottom-left-radius:5px;
+    border-bottom-right-radius:5px;   
+    
+    -webkit-box-shadow: 0 0 3px 2px #ECF2F4;
+           -moz-box-shadow: 0 0 3px 2px #ECF2F4;
+                box-shadow: 0 0 3px 2px #ECF2F4;
     }    
-    .folder:hover {
+    .folder-caption {
+        position: absolute;
+        bottom: 0px;
+        left: 0px;
+        right: 0px;
+        height: 30px;
+        padding-top: 10px;
+        background-color: #666;
+        border-top: 1px solid #999;
+        
+        opacity: 0.8;
+        color: #999;
+        font-size: 12px;                       
+        }            
+    .folder:hover .folder-caption-l {
         text-decoration: underline;
-        color: #666;
-        }
+        color: #fff;
+        }          
+    .folder:hover .i {
+        border: 1px solid #999;
+        }       
+	.i {
+	    border: 1px solid #999;
+	    position: absolute;     
+	    
+	    -moz-border-radius-topleft: 5px;
+	    -moz-border-radius-topright:5px;
+	    -moz-border-radius-bottomleft:5px;
+	    -moz-border-radius-bottomright:5px;
+	    -webkit-border-top-left-radius:5px;
+	    -webkit-border-top-right-radius:5px;
+	    -webkit-border-bottom-left-radius:5px;
+	    -webkit-border-bottom-right-radius:5px;
+	    border-top-left-radius:5px;
+	    border-top-right-radius:5px;
+	    border-bottom-left-radius:5px;
+	    border-bottom-right-radius:5px;	   	    
+	}
+	
+    .i-z-100 {z-index: 100;}
+    .i-z-200 {z-index: 200;}
+    .i-z-300 {z-index: 300;}
+    .i-z-400 {z-index: 400;}
+		.folder:hover .i-z-100 {z-index: 400;}
+		.folder:hover .i-z-200 {z-index: 300;}
+		.folder:hover .i-z-300 {z-index: 200;}
+		.folder:hover .i-z-400 {z-index: 100;}
+
+	.i-rotate-l-32 {
+	    -webkit-transform: rotate(32deg) scale(1.0) skew(0deg) translate(0px);
+	    -moz-transform: rotate(32deg) scale(1.0) skew(0deg) translate(0px);
+	    -o-transform: rotate(32deg) scale(1.0) skew(0deg) translate(0px);   
+	}
+	.i-rotate-l-20 {
+	    -webkit-transform: rotate(20deg) scale(1.0) skew(0deg) translate(0px);
+	    -moz-transform: rotate(20deg) scale(1.0) skew(0deg) translate(0px);
+	    -o-transform: rotate(20deg) scale(1.0) skew(0deg) translate(0px);   
+	}
+	.i-rotate-l-15 {
+	    -webkit-transform: rotate(15deg) scale(1.0) skew(0deg) translate(0px);
+	    -moz-transform: rotate(15deg) scale(1.0) skew(0deg) translate(0px);
+	    -o-transform: rotate(15deg) scale(1.0) skew(0deg) translate(0px);   
+	}
+	.i-rotate-r-32 {
+	    -webkit-transform: rotate(-32deg) scale(1.0) skew(0deg) translate(0px);
+	    -moz-transform: rotate(-32deg) scale(1.0) skew(0deg) translate(0px);
+	    -o-transform: rotate(-32deg) scale(1.0) skew(0deg) translate(0px);   
+	}
+	.i-rotate-r-20 {
+	    -webkit-transform: rotate(-20deg) scale(1.0) skew(0deg) translate(0px);
+	    -moz-transform: rotate(-20deg) scale(1.0) skew(0deg) translate(0px);
+	    -o-transform: rotate(-20deg) scale(1.0) skew(0deg) translate(0px);   
+	}
+	.i-rotate-r-15 {
+	    -webkit-transform: rotate(-15deg) scale(1.0) skew(0deg) translate(0px);
+	    -moz-transform: rotate(-15deg) scale(1.0) skew(0deg) translate(0px);
+	    -o-transform: rotate(-15deg) scale(1.0) skew(0deg) translate(0px);   
+	}
+		.folder:hover .i-rotate-r-32 {
+		    -webkit-transform: rotate(32deg) scale(1.0) skew(0deg) translate(0px);
+		    -moz-transform: rotate(32deg) scale(1.0) skew(0deg) translate(0px);
+		    -o-transform: rotate(32deg) scale(1.0) skew(0deg) translate(0px);   
+		}
+		.folder:hover .i-rotate-r-20 {
+		    -webkit-transform: rotate(20deg) scale(1.0) skew(0deg) translate(0px);
+		    -moz-transform: rotate(20deg) scale(1.0) skew(0deg) translate(0px);
+		    -o-transform: rotate(20deg) scale(1.0) skew(0deg) translate(0px);   
+		}
+		.folder:hover .i-rotate-r-15 {
+		    -webkit-transform: rotate(15deg) scale(1.0) skew(0deg) translate(0px);
+		    -moz-transform: rotate(15deg) scale(1.0) skew(0deg) translate(0px);
+		    -o-transform: rotate(15deg) scale(1.0) skew(0deg) translate(0px);   
+		}
+		.folder:hover .i-rotate-l-32 {
+		    -webkit-transform: rotate(-32deg) scale(1.0) skew(0deg) translate(0px);
+		    -moz-transform: rotate(-32deg) scale(1.0) skew(0deg) translate(0px);
+		    -o-transform: rotate(-32deg) scale(1.0) skew(0deg) translate(0px);   
+		}
+		.folder:hover .i-rotate-l-20 {
+		    -webkit-transform: rotate(-20deg) scale(1.0) skew(0deg) translate(0px);
+		    -moz-transform: rotate(-20deg) scale(1.0) skew(0deg) translate(0px);
+		    -o-transform: rotate(-20deg) scale(1.0) skew(0deg) translate(0px);   
+		}
+		.folder:hover .i-rotate-l-15 {
+		    -webkit-transform: rotate(-15deg) scale(1.0) skew(0deg) translate(0px);
+		    -moz-transform: rotate(-15deg) scale(1.0) skew(0deg) translate(0px);
+		    -o-transform: rotate(-15deg) scale(1.0) skew(0deg) translate(0px);   
+		}
 
 /* Arrows */
 
