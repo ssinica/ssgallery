@@ -23,8 +23,8 @@ APP_NAME="ssgallery"
 APP_LONG_NAME="ssgallery"
 
 # Wrapper
-WRAPPER_CMD="./wrapper"
-WRAPPER_CONF="../conf/wrapper.conf"
+WRAPPER_CMD="[path to wrapper]/launch/wrapper"
+WRAPPER_CONF="[path to wrapper conf]/conf/wrapper.conf"
 
 # Priority at which to run the wrapper.  See "man nice" for valid priorities.
 #  nice is only used if a priority is specified.

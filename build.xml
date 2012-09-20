@@ -2,19 +2,35 @@
 
 	<property name="project.dir" location="." />
 	<property name="build.dir" location="${project.dir}\build" />
-	<property name="gwt.sdk" location="C:\my\soft\gwt-2.4.0" />
 	<property file="${basedir}/build.properties" />
 	<property name="conf.prod.dir" location="${project.dir}\conf\prod" />
 	<property name="conf.example.dir" location="${project.dir}\conf\example" />
+	<property file="${project.dir}/scripts/prod/remote.host.properties" />
 
-	<target name="build" depends="clean,create-build-dir,copy-resources,copy-example-conf,compile,remove-gwt-classes-from-classes,create-jar,compile-gwt,clean-after-build">
-
+	<target name="build">
+		<antcall target="clean" />
+		<antcall target="create-build-dir" />
+		<antcall target="copy-resources" />
+		<antcall target="copy-example-conf" />
+		<antcall target="compile" />
+		<antcall target="remove-gwt-classes-from-classes" />
+		<antcall target="create-jar" />
+		<antcall target="compile-gwt" />
+		<antcall target="clean-after-build" />
 	</target>
 
-	<target name="build-prod" depends="clean,create-build-dir,copy-resources,copy-prod-conf,compile,remove-gwt-classes-from-classes,create-jar,compile-gwt,clean-after-build">
-
+	<target name="build-prod">
+		<antcall target="clean" />
+		<antcall target="create-build-dir" />
+		<antcall target="copy-resources" />
+		<antcall target="copy-prod-conf" />
+		<antcall target="compile" />
+		<antcall target="remove-gwt-classes-from-classes" />
+		<antcall target="create-jar" />
+		<antcall target="compile-gwt" />
+		<antcall target="clean-after-build" />
+		<antcall target="deploy" />
 	</target>
-
 
 	<target name="clean" description="Cleans build directory">
 		<delete dir="${build.dir}">
@@ -140,6 +156,22 @@
 		</delete>
 		<delete dir="${build.dir}/gwt-unitCache">
 		</delete>
+	</target>
+
+	<target name="deploy">				
+		
+		<sshexec host="${host}" username="${user}" password="${password}" trust="true" command="rm -fr ${remote.path}" />
+		<sshexec host="${host}" username="${user}" password="${password}" trust="true" command="mkdir ${remote.path}" />
+
+		<scp todir="${user}:${password}@${host}:${remote.path}" trust="true">
+			<fileset dir="${build.dir}" />
+		</scp>
+
+		<!--
+		TODO: ssh user can not bind to port 80
+		<sshexec host="${host}" username="${user}" password="${password}" trust="true" command="${ssgallery.script} restart" />
+		-->
+		
 	</target>
 
 </project>
