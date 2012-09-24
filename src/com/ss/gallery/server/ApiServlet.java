@@ -57,7 +57,43 @@ public class ApiServlet extends HttpServlet {
 			processWelcome(json, req, resp);
 		} else if (Actions.IMAGES.equals(action)) {
 			processImages(json, req, resp);
+		} else if (Actions.LOGIN.equals(action)) {
+			login(json, req, resp);
+		} else if (Actions.LOGOUT.equals(action)) {
+			logout(json, req, resp);
 		}
+	}
+
+	private void logout(JsonObject json, HttpServletRequest req, HttpServletResponse resp) {
+		ctx.setLoggedInUser(null, req);
+	}
+
+	private void login(JsonObject json, HttpServletRequest req, HttpServletResponse resp) throws IOException {
+		String name = ServerJsonHelper.getString("name", json);
+		String pass = ServerJsonHelper.getString("pass", json);
+
+		boolean found = false;
+		List<GalleryUser> users = ctx.getConfig().getUsers();
+		if (users != null) {
+			for (GalleryUser u : users) {
+				String uname = u.getName();
+				String upass = u.getPass();
+				if (uname.equalsIgnoreCase(name) && upass.equals(pass)) {
+					// bingo!
+					found = true;
+					break;
+				}
+			}
+		}
+
+		if (found) {
+			ctx.setLoggedInUser(name, req);
+		}
+
+		HashMap<String, Object> folderData = new HashMap<String, Object>();
+		folderData.put("found", found);
+		String responseJson = ServerJsonHelper.toJson(folderData);
+		writeResponseData(responseJson, resp);
 	}
 
 	private void processImages(JsonObject json, HttpServletRequest req, HttpServletResponse resp) throws IOException {
@@ -75,6 +111,11 @@ public class ApiServlet extends HttpServlet {
 			writeResponseData("{}", resp);
 			return;
 		}
+		ServerFolder folder = chunk.getFolder();
+		if (!GalleryUtils.canUserViewFolder(ctx.getLoggedInUser(req), folder)) {
+			writeResponseData("{}", resp);
+			return;
+		}
 		
 		// images
 		List<HashMap<String, Object>> imagesData = new ArrayList<HashMap<String, Object>>();
@@ -85,7 +126,6 @@ public class ApiServlet extends HttpServlet {
 		}
 
 		// folder
-		ServerFolder folder = chunk.getFolder();
 		HashMap<String, Object> folderData = new HashMap<String, Object>();
 		folderData.put("caption", folder.getCaption());
 		folderData.put("id", folder.getId());
@@ -113,8 +153,15 @@ public class ApiServlet extends HttpServlet {
 	private void processWelcome(JsonObject json, HttpServletRequest req, HttpServletResponse resp) throws IOException {
 		Set<ServerFolder> folders = gs.listFolders();
 		int collageImagesCount = ctx.getConfig().getFolderImagesCount();
-		List<HashMap<String, Object>> responseData = new ArrayList<HashMap<String,Object>>();
+		List<HashMap<String, Object>> foldersData = new ArrayList<HashMap<String, Object>>();
+
+		String loggedInUser = ctx.getLoggedInUser(req);
+
 		for (ServerFolder folder : folders) {
+
+			if (!GalleryUtils.canUserViewFolder(loggedInUser, folder)) {
+				continue;
+			}
 
 			List<ServerImage> images = gs.getRandomImagesFrom(folder, collageImagesCount);
 			List<String> imagesJsonData = new ArrayList<String>(images.size());
@@ -127,10 +174,13 @@ public class ApiServlet extends HttpServlet {
 			folderData.put("id", folder.getId());
 			folderData.put("images", imagesJsonData);
 
-			responseData.add(folderData);
+			foldersData.add(folderData);
 		}
 
-		String responseJson = ServerJsonHelper.toJson(responseData);
+		HashMap<String, Object> data = new HashMap<String, Object>();
+		data.put("folders", foldersData);
+
+		String responseJson = ServerJsonHelper.toJson(data);
 		writeResponseData(responseJson, resp);
 	}
 	

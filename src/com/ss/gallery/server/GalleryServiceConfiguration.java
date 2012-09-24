@@ -1,6 +1,7 @@
 package com.ss.gallery.server;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.apache.commons.configuration.PropertiesConfiguration;
@@ -11,6 +12,14 @@ import org.apache.commons.logging.LogFactory;
 public class GalleryServiceConfiguration {
 
 	private static final Log log = LogFactory.getLog(GalleryServiceConfiguration.class);
+
+	private static final String APP_DIR_PREFIX = "app.dir.";
+	private static final String APP_DIR_DESCRIPTION = ".caption";
+	private static final String APP_DIR_USERS = ".users";
+
+	private static final String APP_USER_PREFIX = "app.user.";
+	private static final String APP_USER_NAME = ".name";
+	private static final String APP_USER_PASS = ".pass";
 
 	private PropertiesConfiguration pc;
 	private List<DirectoryConfig> directories = new ArrayList<DirectoryConfig>();
@@ -23,6 +32,7 @@ public class GalleryServiceConfiguration {
 	private int imagesChunkSize;
 	private int httpPort;
 	private int folderImagesCount;
+	private List<GalleryUser> users = new ArrayList<GalleryUser>();
 
 	public GalleryServiceConfiguration(PropertiesConfiguration pc) {
 		this.pc = pc;
@@ -41,14 +51,29 @@ public class GalleryServiceConfiguration {
 			httpPort = pc.getInt("app.http.port", 8080);
 			folderImagesCount = pc.getInt("app.folder.images.count", 7);
 
+			parseUsers();
 			parseDirectories();
+
 		} catch (Exception e) {
 			log.error("Failed to parse gallery service configuration. Default values will be used", e);
 		}
 	}
 
-	private static final String APP_DIR_PREFIX = "app.dir.";
-	private static final String APP_DIR_DESCRIPTION = ".caption";
+	private void parseUsers() {
+		int currentIndex = 1;
+		while (true) {
+			String pathProp = APP_USER_PREFIX + currentIndex;
+			String name = pc.getString(pathProp + APP_USER_NAME, "").trim();
+			String pass = pc.getString(pathProp + APP_USER_PASS, "").trim();
+			if (!StringUtils.isEmpty(name) || !StringUtils.isEmpty(pass)) {
+				users.add(new GalleryUser(name, pass));
+				log.info("Gallery user detected: " + name);
+			} else {
+				break;
+			}
+			currentIndex++;
+		}
+	}
 
 	private void parseDirectories() {
 		int currentIndex = 1;
@@ -59,8 +84,14 @@ public class GalleryServiceConfiguration {
 				break;
 			}
 			String caption = pc.getString(pathProp + APP_DIR_DESCRIPTION, "");
+			String[] dirUsers = pc.getStringArray(pathProp + APP_DIR_USERS);
 
 			DirectoryConfig dc = new DirectoryConfig(path, caption);
+
+			if (dirUsers != null && dirUsers.length > 0) {
+				dc.setUsers(Arrays.asList(dirUsers));
+			}
+
 			directories.add(dc);
 
 			currentIndex++;
@@ -105,5 +136,9 @@ public class GalleryServiceConfiguration {
 
 	public int getFolderImagesCount() {
 		return folderImagesCount;
+	}
+
+	public List<GalleryUser> getUsers() {
+		return users;
 	}
 }

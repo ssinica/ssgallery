@@ -267,7 +267,7 @@ public class GalleryServiceImpl implements GalleryService {
 		String folderName = folder.getName();
 		String id = GalleryUtils.genId(folderName);		
 		String folderCaption = StringUtils.isEmpty(folderConfig.getCaption()) ? folderName : folderConfig.getCaption();		
-		ServerFolder gf = new ServerFolder(id, folderCaption, folder.getPath(), position);
+		ServerFolder gf = new ServerFolder(id, folderCaption, folder.getPath(), position, folderConfig.getUsers());
 
 		String thumbDir = config.getThumbDir();
 		String viewDir = config.getViewDir();

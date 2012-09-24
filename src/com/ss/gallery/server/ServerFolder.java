@@ -1,17 +1,23 @@
 package com.ss.gallery.server;
 
+import java.util.List;
+
+import org.apache.commons.lang.builder.ToStringBuilder;
+
 public class ServerFolder implements Comparable<ServerFolder> {
 
 	private String caption;
 	private String path;
 	private String id;
 	private int position = 0;
+	private List<String> users = null;
 
-	public ServerFolder(String id, String caption, String path, int position) {
+	public ServerFolder(String id, String caption, String path, int position, List<String> users) {
 		this.caption = caption;
 		this.path = path;
 		this.id = id;
 		this.position = position;
+		this.users = users;
 	}
 
 	public void setPath(String path) {
@@ -58,7 +64,10 @@ public class ServerFolder implements Comparable<ServerFolder> {
 
 	@Override
 	public String toString() {
-		return "{" + path + "}";
+		return new ToStringBuilder(this)
+			.append("id: " + id)
+			.append("path: " + path)
+			.toString();
 	}
 
 	@Override
@@ -74,6 +83,14 @@ public class ServerFolder implements Comparable<ServerFolder> {
 
 	public int getPosition() {
 		return position;
+	}
+
+	public List<String> getUsers() {
+		return users;
+	}
+
+	public void setUsers(List<String> users) {
+		this.users = users;
 	}
 
 }

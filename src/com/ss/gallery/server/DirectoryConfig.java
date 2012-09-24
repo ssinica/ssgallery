@@ -1,10 +1,13 @@
 package com.ss.gallery.server;
 
+import java.util.List;
+
 
 public class DirectoryConfig {
 
 	private String path;
 	private String caption;
+	private List<String> users = null;
 
 	public DirectoryConfig(String path, String caption) {
 		this.path = path;
@@ -17,6 +20,14 @@ public class DirectoryConfig {
 
 	public String getCaption() {
 		return caption;
+	}
+
+	public void setUsers(List<String> users) {
+		this.users = users;
+	}
+
+	public List<String> getUsers() {
+		return users;
 	}
 
 	@Override

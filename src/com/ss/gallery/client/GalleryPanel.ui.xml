@@ -4,26 +4,40 @@
 	<ui:style>
 		
 	</ui:style>
-	<g:HTMLPanel ui:field="elMain" styleName="container">	   
-	   <div class="row">	       
-	       <div class="span12">	       	           
-	           <div class="cp-w">
-	               <span ui:field="elCaption" class="cp">
-	                   <span class="cp-pre1">S</span>
-	                   <span class="cp-pre2">S</span>
-	                   <span class="cp-post">Gallery</span>
-	               </span>
-	               <span ui:field="elFolder" class="cp-fld-n"></span>
-	               <span ui:field="elCountDetails" class="cp-fld-cd"></span>
-	               <span ui:field="elCount" class="cp-fld-c"></span>	               
-	           </div>
-	           <ul class="sf-w" ui:field="elSmallPhotosW"></ul>
-	           <div class="bf-w" ui:field="elBigPhotoW"></div>	                     	           	      
-	       </div>
-	       <div class="span12 bottom">
-                Created by sergey@sinica.me
-           </div>	       
-	   </div>
-	   
+	<g:HTMLPanel ui:field="elMain" styleName="container">
+		<div class="row">
+			<div class="span12">
+				<div class="cp-w">
+					<div class="cp-w-left">
+						<span ui:field="elCaption" class="cp">
+							<span class="cp-pre1">S</span>
+							<span class="cp-pre2">S</span>
+							<span class="cp-post">Gallery</span>
+						</span>
+						<span ui:field="elFolder" class="cp-fld-n"></span>
+						<span ui:field="elCountDetails" class="cp-fld-cd"></span>
+						<span ui:field="elCount" class="cp-fld-c"></span>
+					</div>
+					<div ui:field="elLoginWrapper" class="cp-w-right login">
+						<span class="login-text">Имя:</span>
+						<input type="text" ui:field="elName"></input>
+						<span class="login-text">Пароль:</span>
+						<input type="password" ui:field="elPass"></input>
+						<span ui:field="elLogin" class="login-lnk">Войти</span>
+					</div>
+					<div ui:field="elLoggedWrapper" class="cp-w-right login">
+                        <span class="logged-as">Привет, </span>                        
+                        <span class="logged" ui:field="elLogged"></span>                        
+                        <span ui:field="elLogout" class="login-lnk">Выйти</span>
+                    </div>
+				</div>
+				<ul class="sf-w" ui:field="elSmallPhotosW"></ul>
+				<div class="bf-w" ui:field="elBigPhotoW"></div>
+			</div>
+			<div class="span12 bottom">
+				Created by sergey@sinica.me
+           </div>
+		</div>
+
 	</g:HTMLPanel>
 </ui:UiBinder> 

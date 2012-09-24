@@ -5,6 +5,13 @@ html {
 body {
 	background-color: #333;
 }
+.json {
+    display: none;
+    visibility: hidden;
+    width: 0px;
+    height: 0px;
+    line-height: 0px;            
+}
 .focus-panel {
 	outline-width: 0px;
     }
@@ -23,12 +30,22 @@ body {
 .cp-w {    
     padding: 10px 0px 10px 0px;
     position: relative;
+    overflow: hidden;
     }
+    .cp-w-left {
+        float: left;
+        overflow: hidden;
+        }
+    .cp-w-right {
+        float: right;
+        overflow: hidden;
+        }
     .cp {
 		font-size: 32px;
 		color: #fff;
 		padding-right: 30px;
 		cursor: pointer;
+		line-height: 32px;
 		}
 		.cp:hover {		  
 		   text-decoration: underline;
@@ -64,7 +81,42 @@ body {
         font-size: 25px;
         color: #999;
         padding-left: 30px;
+        }    
+
+/* Login */
+.login input {
+	font-size: 11px;
+	width: 80px;
+	line-height: 11px;
+	height: auto;
+	border: 0px;
+	background-color: #999;
+	color: #ccc;
+	padding-right: 5px;
+    }
+.login-text {
+	color: #ccc;
+	font-size: 11px;
+	line-height: 11px;
+	}
+    .login-lnk {
+        font-size: 11px;
+        color: #999;
+        cursor: pointer;
+        text-decoration: underline;
         }
+        .login-lnk:hover {
+            color: #ccc;            
+            }
+.logged-as {
+    font-size: 11px;
+    padding-right: 5px;
+    color: #ccc;	
+    }
+.logged {
+	font-size: 11px;
+	color: #ccc;
+	}
 
 /* Big photo */
 .bf-w {			

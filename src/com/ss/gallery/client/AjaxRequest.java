@@ -39,7 +39,7 @@ public class AjaxRequest implements RequestCallback {
 		try {
 			rb.send();
 		} catch (RequestException e) {
-			Window.alert("Error: " + e.getMessage());
+			Window.alert("Не достучаться до сервера :(");
 		}
 	}
 
@@ -49,12 +49,14 @@ public class AjaxRequest implements RequestCallback {
 	@Override
 	public void onResponseReceived(Request request, Response response) {
 		String responseText = response.getText();
+		JSONObject data = null;
 		try {
-			JSONObject data = JSONHelper.getJsonFromString(responseText);
-			callback.onResponse(data);
+			data = JSONHelper.getJsonFromString(responseText);
 		} catch (Exception e) {
-			Window.alert("Error: " + e.getMessage());
+			Window.alert("Сервер прислал билебирду - ничего не понять :(");
+			return;
 		}
+		callback.onResponse(data);
 	}
 
 	/**

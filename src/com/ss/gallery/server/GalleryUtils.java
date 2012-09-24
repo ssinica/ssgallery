@@ -1,6 +1,7 @@
 package com.ss.gallery.server;
 
 import java.io.File;
+import java.util.List;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.filefilter.FileFilterUtils;
@@ -80,6 +81,17 @@ public class GalleryUtils {
 		fileName = fileName.replaceAll(" ", "_");
 		fileName = fileName.replaceAll("\\+", "_");
 		return fileName;
+	}
+
+	public static boolean canUserViewFolder(String name, ServerFolder folder) {
+		List<String> users = folder.getUsers();
+		if (users == null || users.size() == 0) {
+			return true;
+		}
+		if (name == null || "".equals(name)) {
+			return false;
+		}
+		return users.contains(name);
 	}
 
 }

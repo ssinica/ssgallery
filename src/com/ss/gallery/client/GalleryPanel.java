@@ -6,8 +6,10 @@ import java.util.List;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.DivElement;
 import com.google.gwt.dom.client.Element;
+import com.google.gwt.dom.client.InputElement;
 import com.google.gwt.dom.client.NativeEvent;
 import com.google.gwt.dom.client.SpanElement;
+import com.google.gwt.dom.client.Style.Display;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.KeyDownEvent;
@@ -45,6 +47,8 @@ public class GalleryPanel extends Composite implements
 	private static final String UID_FOLDER_CLICK = "uid-f";
 	private static final String UID_CAPTION_CLICK = "uid-c";
 	private static final String UID_SMALL_IMAGE_CLICK = "uid-sic";
+	private static final String UID_LOGIN = "uid-login";
+	private static final String UID_LOGOUT = "uid-logout";
 	
 	private static final String ID_NEXT_SMALL = "id-nsi";
 	private static final String ID_PREV_SMALL = "id-psi";
@@ -61,6 +65,13 @@ public class GalleryPanel extends Composite implements
 	@UiField SpanElement elFolder;
 	@UiField SpanElement elCount;
 	@UiField SpanElement elCountDetails;
+	@UiField SpanElement elLogin;
+	@UiField InputElement elName;
+	@UiField InputElement elPass;
+	@UiField DivElement elLoginWrapper;
+	@UiField DivElement elLoggedWrapper;
+	@UiField SpanElement elLogged;
+	@UiField SpanElement elLogout;
 
 	private ClientFolder selectedFolder;
 	private List<ClientImage> loadedImages = new ArrayList<ClientImage>();
@@ -82,6 +93,15 @@ public class GalleryPanel extends Composite implements
 		History.addValueChangeHandler(this);
 		addDomHandler(this, ClickEvent.getType());
 		GWTUtils.setUidToElement(UID_CAPTION_CLICK, elCaption);
+		GWTUtils.setUidToElement(UID_LOGIN, elLogin);
+		GWTUtils.setUidToElement(UID_LOGOUT, elLogout);
+
+		JSONObject json = JSONHelper.getJsonFromElement(Actions.JSON_DATA_EL_ID);
+		String loggedInUser = null;
+		if (json != null) {
+			loggedInUser = JSONHelper.getString(json, "user");
+		}
+		setCurrentUser(loggedInUser);
 	}
 
 	/**
@@ -455,6 +475,10 @@ public class GalleryPanel extends Composite implements
 				loadSmallImages(selectedFolder.getId(), nextImageId, true);
 				History.newItem(selectedFolder.getId() + "/" + nextImageId, false);
 			}
+		} else if (UID_LOGIN.equals(uid)) {
+			login();
+		} else if (UID_LOGOUT.equals(uid)) {
+			logout();
 		}
 	}
 
@@ -482,8 +506,10 @@ public class GalleryPanel extends Composite implements
 		// clears all variables and UI for images list state
 		clearImagesState();
 
+		JSONObject jsonObj = JSONHelper.getObject(json, "data");
+
 		// paint folders list
-		List<ClientFolder> folders = JSONHelper.getArray(json, "data", new ValueParser<ClientFolder>() {
+		List<ClientFolder> folders = JSONHelper.getArray(jsonObj, "folders", new ValueParser<ClientFolder>() {
 			@Override
 			public ClientFolder parse(JSONValue jsonValue) {
 				JSONObject json = jsonValue.isObject();
@@ -564,6 +590,57 @@ public class GalleryPanel extends Composite implements
 		} else {
 			String imageIdToSelect = loadedImages.get(idx - 1).getId();
 			History.newItem(selectedFolder.getId() + "/" + imageIdToSelect);
+		}
+	}
+
+	private void login() {
+		final String name = elName.getValue().trim();
+		String pass = elPass.getValue().trim();
+		elPass.setValue("");
+		if (GWTUtils.isEmpty(name) || GWTUtils.isEmpty(pass)) {
+			return;
+		}
+		new AjaxRequest(Actions.LOGIN)
+			.addParam("name", name)
+			.addParam("pass", pass)
+			.send(new AjaxCallback() {
+				@Override
+				public void onResponse(JSONObject json) {
+					applyLogin(name, json);
+				}
+		});
+
+	}
+
+	private void applyLogin(String name, JSONObject json) {
+		JSONObject jsonObj = JSONHelper.getObject(json, "data");
+		boolean found = JSONHelper.getPrimitiveBoolean(jsonObj, "found", false);
+		if (!found) {
+			Window.alert("Пользователь " + GWTUtils.safeString(name) + " не найден!");
+		} else {
+			elName.setValue("");
+			setCurrentUser(name);
+		}
+	}
+
+	private void logout() {
+		new AjaxRequest(Actions.LOGOUT).send(new AjaxCallback() {
+			@Override
+			public void onResponse(JSONObject json) {
+				setCurrentUser(null);
+			}
+		});
+	}
+
+	private void setCurrentUser(String loggedInUser) {
+		if (GWTUtils.isEmpty(loggedInUser)) {
+			elLogged.setInnerHTML("");
+			elLoggedWrapper.getStyle().setDisplay(Display.NONE);
+			elLoginWrapper.getStyle().setDisplay(Display.BLOCK);
+		} else {
+			elLogged.setInnerHTML(GWTUtils.safeString(loggedInUser));
+			elLoggedWrapper.getStyle().setDisplay(Display.BLOCK);
+			elLoginWrapper.getStyle().setDisplay(Display.NONE);
 		}
 	}
 

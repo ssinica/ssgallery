@@ -24,9 +24,11 @@ import org.apache.commons.lang.StringUtils;
 public class ImageServlet extends HttpServlet {
 
 	private GalleryService gs;
+	private GalleryContext ctx;
 
 	public ImageServlet(GalleryService gs, GalleryContext ctx) {
 		this.gs = gs;
+		this.ctx = ctx;
 	}
 
 	@Override
@@ -42,6 +44,12 @@ public class ImageServlet extends HttpServlet {
 			writeDummyImageToResponse(size, resp);
 
 		} else {
+
+			ServerFolder folder = gs.getFolderById(folderId);
+			if (folder == null || !GalleryUtils.canUserViewFolder(ctx.getLoggedInUser(req), folder)) {
+				writeDummyImageToResponse(size, resp);
+				return;
+			}
 
 			String path = gs.getPathToImage(folderId, imageId, size);
 			File file = null;
