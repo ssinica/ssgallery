@@ -9,6 +9,7 @@ import java.util.Map.Entry;
 import java.util.NoSuchElementException;
 import java.util.Random;
 import java.util.Set;
+import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.concurrent.ExecutorService;
@@ -19,7 +20,7 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.LogFactory;
 
-public class GalleryServiceImpl implements GalleryService {
+public class GalleryServiceImpl implements GalleryService, GalleryServiceConfigurationListener, CreateThumbsTask.Callback {
 	
 	private static final org.apache.commons.logging.Log log = LogFactory.getLog(GalleryServiceImpl.class);
 	private static Random RANDOM = new Random();
@@ -27,16 +28,52 @@ public class GalleryServiceImpl implements GalleryService {
 	private ExecutorService executor;
 	private GalleryContext ctx;
 	private GalleryServiceConfiguration config;
-	private TreeMap<ServerFolder, TreeSet<ServerImage>> data = new TreeMap<ServerFolder, TreeSet<ServerImage>>();
+
+	private SortedMap<ServerFolder, TreeSet<ServerImage>> data;
 
 	public GalleryServiceImpl(GalleryContext ctx) {
+		data = Collections.synchronizedSortedMap(new TreeMap<ServerFolder, TreeSet<ServerImage>>());
 		this.ctx = ctx;
 		this.config = ctx.getConfig();
+		this.config.addListener(this);
 	}
 
 	@Override
 	public void start() {
 		startImpl();
+	}
+
+	@Override
+	//CreateThumbsTask.Callback
+	public void onCreateThumbsTaskFinished(String path) {
+		DirectoryConfig foundDirConfig = null;
+		List<DirectoryConfig> paths = config.getPaths();
+		for (DirectoryConfig p : paths) {
+			if (p.getPath().equals(path)) {
+				foundDirConfig = p;
+				break;
+			}
+		}
+		if (foundDirConfig == null) {
+			log.debug("Path " + path + " is found in configuration. Folder will not be reloaded.");
+			return;
+		}
+		
+		TreeSet<ServerImage> images = new TreeSet<ServerImage>();
+		ServerFolder folder = reloadFolder(foundDirConfig, images);
+
+		if (folder != null) {
+			data.put(folder, images);
+			log.debug("Updated folder " + path + " images list");
+		}
+
+	}
+
+	@Override
+	// GalleryServiceConfigurationListener
+	public void onPathsChanged(List<DirectoryConfig> newDirs, List<DirectoryConfig> removedDirs, List<DirectoryConfig> changedDirs) {
+		rebuildModel();
+		createThumbsIfRequired();
 	}
 
 	@Override
@@ -85,7 +122,7 @@ public class GalleryServiceImpl implements GalleryService {
 		return chunk;
 	}
 
-	public ImagesChunk loadImagesChunk(ServerFolder folder, String startImageId, Iterator<ServerImage> it) {		
+	private ImagesChunk loadImagesChunk(ServerFolder folder, String startImageId, Iterator<ServerImage> it) {
 
 		// prepare images chunk
 		int chunkSize = config.getImagesChunkSize();
@@ -224,18 +261,25 @@ public class GalleryServiceImpl implements GalleryService {
 		executor = Executors.newFixedThreadPool(threadsCount);
 
 		// build images model
-		buildModel();
+		rebuildModel();
 
 		// prepare thumbs on start
 		createThumbsIfRequired();
 	}
 
-	private void buildModel() {
+	private synchronized void rebuildModel() {
 		long start = System.nanoTime();
+
+		data.clear();
+
 		log.info("Building folder model...");
 		List<DirectoryConfig> paths = config.getPaths();
 		for (int i = 0; i < paths.size(); i++) {
-			reloadFolder(paths.get(i), i);
+			TreeSet<ServerImage> images = new TreeSet<ServerImage>();
+			ServerFolder serverFolder = reloadFolder(paths.get(i), images);
+			if (serverFolder != null) {
+				data.put(serverFolder, images);
+			}
 		}
 		
 		Iterator<Entry<ServerFolder, TreeSet<ServerImage>>> it = data.entrySet().iterator();
@@ -249,24 +293,29 @@ public class GalleryServiceImpl implements GalleryService {
 
 	private void createThumbsIfRequired() {
 		List<DirectoryConfig> paths = config.getPaths();
+		for (DirectoryConfig p : paths) {
+			createThumbsIfRequired(p);
+		}
+	}
+
+	private void createThumbsIfRequired(DirectoryConfig p) {
 		String thumbDir = config.getThumbDir();
 		int thumbSize = config.getThumbSize();
 		String viewDir = config.getViewDir();
 		int viewSize = config.getViewSize();
-		for (DirectoryConfig p : paths) {
-			executor.execute(new CreateThumbsTask(p.getPath(), thumbDir, thumbSize, viewDir, viewSize));
-		}
+		executor.execute(new CreateThumbsTask(p.getPath(), thumbDir, thumbSize, viewDir, viewSize, this));
 	}
 
-	private void reloadFolder(DirectoryConfig folderConfig, int position) {
+	private ServerFolder reloadFolder(DirectoryConfig folderConfig, TreeSet<ServerImage> images) {
 		File folder = GalleryUtils.getDir(folderConfig.getPath());
 		if (folder == null) {
-			return;
+			return null;
 		}
 
+		int position = folderConfig.getPosition();
 		String folderName = folder.getName();
-		String id = GalleryUtils.genId(folderName);		
-		String folderCaption = StringUtils.isEmpty(folderConfig.getCaption()) ? folderName : folderConfig.getCaption();		
+		String folderCaption = StringUtils.isEmpty(folderConfig.getCaption()) ? folderName : folderConfig.getCaption();
+		String id = GalleryUtils.genId(folderCaption);
 		ServerFolder gf = new ServerFolder(id, folderCaption, folder.getPath(), position, folderConfig.getUsers());
 
 		String thumbDir = config.getThumbDir();
@@ -275,13 +324,11 @@ public class GalleryServiceImpl implements GalleryService {
 		File thumbs = GalleryUtils.getDir(folder, thumbDir);
 		File views = GalleryUtils.getDir(folder, viewDir);
 		if (thumbs == null || views == null) {
-			data.put(gf, new TreeSet<ServerImage>());
-			return;
+			return gf;
 		}
 		
 		File[] allThumbs = GalleryUtils.listJpegs(thumbs);
 		File[] allViews = GalleryUtils.listJpegs(thumbs);
-		TreeSet<ServerImage> images = new TreeSet<ServerImage>();
 		File[] jpegs = GalleryUtils.listJpegs(folder);
 		for (File jpeg : jpegs) {
 			if (!GalleryUtils.thumbExist(jpeg, allThumbs) || !GalleryUtils.thumbExist(jpeg, allViews)) {
@@ -293,7 +340,7 @@ public class GalleryServiceImpl implements GalleryService {
 			images.add(gi);
 		}
 
-		data.put(gf, images);
+		return gf;
 	}
 
 }

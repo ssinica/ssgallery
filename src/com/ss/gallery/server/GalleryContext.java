@@ -3,16 +3,14 @@ package com.ss.gallery.server;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
-import org.apache.commons.configuration.PropertiesConfiguration;
-
 public class GalleryContext {
 
 	private String CURRENT_LOGGED_USER = "__logged_user___";
 
 	private GalleryServiceConfiguration config;
 
-	public GalleryContext(PropertiesConfiguration pc) {
-		this.config = new GalleryServiceConfiguration(pc);
+	public GalleryContext(GalleryServiceConfiguration config) {
+		this.config = config;
 	}
 
 	public GalleryServiceConfiguration getConfig() {

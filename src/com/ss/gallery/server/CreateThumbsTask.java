@@ -21,13 +21,15 @@ public class CreateThumbsTask implements Runnable {
 	private int thumbSize;
 	private String viewDir;
 	private int viewSize;
+	private Callback callback;
 
-	public CreateThumbsTask(String path, String thumbsDir, int thumbSize, String viewDir, int viewSize) {
+	public CreateThumbsTask(String path, String thumbsDir, int thumbSize, String viewDir, int viewSize, Callback callback) {
 		this.path = path;
 		this.thumbDir = thumbsDir;
 		this.thumbSize = thumbSize;
 		this.viewDir = viewDir;
 		this.viewSize = viewSize;
+		this.callback = callback;
 	}
 
 	@Override
@@ -78,6 +80,10 @@ public class CreateThumbsTask implements Runnable {
 		log.info("In dir " + path + " created " + scalledThumbs
 				+ " thumbs and " + scalledViews + " views in "
 				+ TimeUnit.NANOSECONDS.toMillis(elapsed) + " ms.");
+
+		if (callback != null && (scalledThumbs > 0 || scalledViews > 0)) {
+			callback.onCreateThumbsTaskFinished(path);
+		}
 	}
 
 	private boolean createThumb(File jpeg, File thumbsDir, int width) {
@@ -96,6 +102,10 @@ public class CreateThumbsTask implements Runnable {
 			return false;
 		}
 
+	}
+
+	public static interface Callback {
+		void onCreateThumbsTaskFinished(String path);
 	}
 
 }

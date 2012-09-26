@@ -1,7 +1,6 @@
 package com.ss.gallery.server;
 
 import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.eclipse.jetty.server.Server;
@@ -13,8 +12,6 @@ import org.tanukisoftware.wrapper.WrapperListener;
 import org.tanukisoftware.wrapper.WrapperManager;
 
 public class GalleryServer implements WrapperListener {
-
-	private static final String PROPERTIES_FILE_NAME = "ssgallery.properties";
 
 	private static final Log log = LogFactory.getLog(GalleryServer.class);
 
@@ -48,13 +45,8 @@ public class GalleryServer implements WrapperListener {
 	}
 
 	private void initContext() throws ConfigurationException {
-		PropertiesConfiguration pc = new PropertiesConfiguration();
-		pc.setDelimiterParsingDisabled(false);
-		pc.setEncoding("UTF-8");
-		pc.load(PROPERTIES_FILE_NAME);
-
-		// pc.setReloadingStrategy(new FileChangedReloadingStrategy());
-		ctx = new GalleryContext(pc);
+		GalleryServiceConfiguration config = new GalleryServiceConfiguration();
+		ctx = new GalleryContext(config);
 	}
 
 	private void startHttpServer() throws Exception {
