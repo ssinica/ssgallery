@@ -1,15 +1,11 @@
 package com.ss.gallery.server;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -52,7 +48,6 @@ public class GalleryServiceConfiguration implements ConfigurationListener {
 	private String war;
 	private int imagesChunkSize;
 	private int httpPort;
-	private int folderImagesCount;
 	private List<GalleryUser> users = new ArrayList<GalleryUser>();
 	private long configReloadTimeout;
 	private String rootDirConfigFile;
@@ -156,7 +151,6 @@ public class GalleryServiceConfiguration implements ConfigurationListener {
 			war = pc.getString("app.war", "/");
 			imagesChunkSize = pc.getInt("app.images.chunk.size", 6);
 			httpPort = pc.getInt("app.http.port", 8080);
-			folderImagesCount = pc.getInt("app.folder.images.count", 7);
 			configReloadTimeout = pc.getLong("app.config.reload.timeout", 30L);
 			rootDirConfigFile = pc.getString("app.root.dir.config.file", ".ssgallery.ini");
 
@@ -231,6 +225,19 @@ public class GalleryServiceConfiguration implements ConfigurationListener {
 		return dirs;
 	}
 
+	private PropertiesConfiguration loadProps(String path) {
+		PropertiesConfiguration pc = new PropertiesConfiguration();
+		pc.setDelimiterParsingDisabled(false);
+		pc.setEncoding("UTF-8");
+		try {
+			pc.load(path);
+			return pc;
+		} catch (ConfigurationException e) {
+			log.error("Failed to load properties from file: " + path, e);
+			return null;
+		}
+	}
+
 	private int parseRootDir(File rootDir, int priority, List<DirectoryConfig> dirs) {
 		if (!rootDir.exists() || rootDir.isFile()) {
 			return priority;
@@ -241,33 +248,20 @@ public class GalleryServiceConfiguration implements ConfigurationListener {
 		String configFilePath = FilenameUtils.concat(rootDir.getPath(), getRootDirConfigFile());
 		File configFile = new File(configFilePath);
 		if (configFile.exists() && configFile.isFile()) {
-			Properties props = new Properties();
-			try {
-				props.load(new FileInputStream(configFile));
+			PropertiesConfiguration props = loadProps(configFilePath);
+			if (props != null) {
 				log.debug("properties loaded for file: " + configFilePath);
 
-				String caption = props.getProperty("caption", rootDir.getName());
-				String usersString = props.getProperty("users", "");
-				Integer pr = Integer.valueOf(props.getProperty("priority", String.valueOf(priority)));
+				String caption = props.getString("caption", rootDir.getName());
+				String users[] = props.getStringArray("users");
+				Integer pr = props.getInt("priority", priority);
 				DirectoryConfig d = new DirectoryConfig(rootDir.getPath(), caption);
 				d.setPosition(pr);
-				if(!StringUtils.isEmpty(usersString)) {
-					List<String> users = new ArrayList<String>();
-					String[] usersArray = usersString.split(",");
-					for (String u : usersArray) {
-						users.add(u.trim());
-					}
-					d.setUsers(users);
-				}
 				dirs.add(d);
+				if (users != null) {
+					d.setUsers(Arrays.asList(users));
+				}
 				log.debug("Added root dir: " + d);
-
-			} catch (FileNotFoundException e) {
-				log.error("Failed to load props from file: " + configFilePath + ". File not found", e);
-			} catch (IOException e) {
-				log.error("Failed to load props from file: " + configFilePath + ". IOException", e);
-			} catch (Exception e) {
-				log.error("Failed to parse " + configFilePath, e);
 			}
 		}
 		
@@ -318,10 +312,6 @@ public class GalleryServiceConfiguration implements ConfigurationListener {
 
 	public int getHttpPort() {
 		return httpPort;
-	}
-
-	public int getFolderImagesCount() {
-		return folderImagesCount;
 	}
 
 	public List<GalleryUser> getUsers() {

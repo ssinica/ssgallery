@@ -129,6 +129,8 @@ public class ApiServlet extends HttpServlet {
 		HashMap<String, Object> folderData = new HashMap<String, Object>();
 		folderData.put("caption", folder.getCaption());
 		folderData.put("id", folder.getId());
+		folderData.put("imagesCount", folder.getImagesCount());
+		folderData.put("folderSize", folder.getSizeInBytes());
 
 		ServerImage nextImage = chunk.getNextImage();
 		ServerImage prevImage = chunk.getPrevImage();
@@ -152,7 +154,7 @@ public class ApiServlet extends HttpServlet {
 
 	private void processWelcome(JsonObject json, HttpServletRequest req, HttpServletResponse resp) throws IOException {
 		Set<ServerFolder> folders = gs.listFolders();
-		int collageImagesCount = ctx.getConfig().getFolderImagesCount();
+		int collageImagesCount = 4;
 		List<HashMap<String, Object>> foldersData = new ArrayList<HashMap<String, Object>>();
 
 		String loggedInUser = ctx.getLoggedInUser(req);
@@ -173,6 +175,8 @@ public class ApiServlet extends HttpServlet {
 			folderData.put("caption", folder.getCaption());
 			folderData.put("id", folder.getId());
 			folderData.put("images", imagesJsonData);
+			folderData.put("imagesCount", folder.getImagesCount());
+			folderData.put("folderSize", folder.getSizeInBytes());
 
 			foldersData.add(folderData);
 		}

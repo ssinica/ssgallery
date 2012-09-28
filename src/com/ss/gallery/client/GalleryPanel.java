@@ -1,7 +1,11 @@
 package com.ss.gallery.client;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.ListIterator;
+import java.util.RandomAccess;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.DivElement;
@@ -230,7 +234,9 @@ public class GalleryPanel extends Composite implements
 			return;
 		}
 		String folderCaption = JSONHelper.getString(folderJson, "caption");
-		selectedFolder = new ClientFolder(folderId, folderCaption, null);
+		long folderSize = JSONHelper.getPrimitiveLong(json, "folderSize");
+		int imagesCount = JSONHelper.getPrimitiveInt(json, "imagesCount");
+		selectedFolder = new ClientFolder(folderId, folderCaption, null, folderSize, imagesCount);
 
 		if (GWTUtils.isEmpty(selectedImageId)) {
 			selectedImageId = loadedImages.get(0).getId();
@@ -405,35 +411,53 @@ public class GalleryPanel extends Composite implements
 		return "sfwid-" + imageId;
 	}
 
-	private String[] zindexes = new String[] { "i-z-100", "i-z-200", "i-z-300", "i-z-400" };
-	private Integer[] tops = new Integer[] { 21, 25, 35, 45 };
-	private Integer[] lefts = new Integer[] { 20, 40, 60 };
-	private String[] d = new String[] { "15", "20", "32" };
-	private String[] turns = new String[] { "i-rotate-r-", "i-rotate-l-" };
-	
-	private String genFolderImage(String imageId, String folderId) {
-
-		String z = zindexes[Random.nextInt(zindexes.length)];
-		Integer top = tops[Random.nextInt(tops.length)];
-		Integer left = lefts[Random.nextInt(lefts.length)];
-		String degree = d[Random.nextInt(d.length)];
-		String turn = turns[Random.nextInt(turns.length)];
-
-		String className = "i " + z + " " + turn + degree;
-
+	private String genFolderImage(String imageId, String folderId, int position, int zindex) {
+		String className = "fld-i fld-i__" + position;
 		String src = GalleryClientUtils.genSmallImageSrc(folderId, imageId);
-		return "<img class='" + className + "' src='" + src + "' style='top:" + top + "px;left:" + left + "px;'></img>";
+		return "<div class='" + className + "' style='z-index:" + zindex + ";'><img src='" + src + "'></img></div>";
+	}
+	
+	public void shuffle(List<?> list) {
+		int size = list.size();
+		int SHUFFLE_THRESHOLD = 5;
+		if (size < SHUFFLE_THRESHOLD || list instanceof RandomAccess) {
+			for (int i = size; i > 1; i--)
+				Collections.swap(list, i - 1, Random.nextInt(i));
+		} else {
+			Object arr[] = list.toArray();
+
+			// Shuffle array
+			for (int i = size; i > 1; i--)
+				swap(arr, i - 1, Random.nextInt(i));
+
+            // Dump array back into list
+			ListIterator it = list.listIterator();
+			for (int i = 0; i < arr.length; i++) {
+				it.next();
+				it.set(arr[i]);
+			}
+		}
+	}
+
+	private static void swap(Object[] arr, int i, int j) {
+		Object tmp = arr[i];
+		arr[i] = arr[j];
+		arr[j] = tmp;
 	}
 
 	private String genFolderHtml(ClientFolder folder) {
+
+		List<Integer> zindexes = Arrays.asList(21, 22, 23, 24);
+		shuffle(zindexes);
 
 		String folderId = folder.getId();
 		
 		String imagesHtml = "";
 		List<String> images = folder.getRandomImagesList();
 		if (!GWTUtils.isEmpty(images)) {
-			for (int i = 0; i < images.size(); i++) {
-				imagesHtml += genFolderImage(images.get(i), folderId);
+			int size = Math.min(4, images.size());
+			for (int i = 0; i < size; i++) {
+				imagesHtml += genFolderImage(images.get(i), folderId, i + 1, zindexes.get(i));
 			}
 		}
 
@@ -441,15 +465,15 @@ public class GalleryPanel extends Composite implements
 		String uidAndDq = GWTUtils.genUid(UID_FOLDER_CLICK) + " " + dq;
 		String html = "";
 		html += "<li class='sf-item' " + uidAndDq + ">";
-			html += "<div class='folder'>";
-				html += "<div class='folder-caption'>";
-					html += "<span class='folder-caption-l'>" + GWTUtils.safeString(folder.getCaption()) + "</span>";
-				html += "</div>";
+			html += "<div class='fld'>";
+				html += "<div class='fld-ic'>" + folder.getImagesCount() + "</div>";
+				html += "<div class='fld-cw'></div>";
+				html += "<div class='fld-c'>" + GWTUtils.safeString(folder.getCaption()) + "</div>";				
 				html += imagesHtml;
 			html += "</div>";
 		html += "</li>";
 		return html;
-	}	
+	}
 
 	private void processClickEvent(String uid, JSONObject json) {
 		if (UID_FOLDER_CLICK.equals(uid)) {
@@ -516,8 +540,10 @@ public class GalleryPanel extends Composite implements
 				String caption = JSONHelper.getString(json, "caption");
 				String id = JSONHelper.getString(json, "id");
 				List<String> randomImagesIds = JSONHelper.getStrings(json, "images");
+				long folderSize = JSONHelper.getPrimitiveLong(json, "folderSize");
+				int imagesCount = JSONHelper.getPrimitiveInt(json, "imagesCount");
 
-				ClientFolder f = new ClientFolder(id, caption, randomImagesIds);
+				ClientFolder f = new ClientFolder(id, caption, randomImagesIds, folderSize, imagesCount);
 				return f;
 			}
 		});

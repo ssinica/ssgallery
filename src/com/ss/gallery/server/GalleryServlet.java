@@ -56,7 +56,7 @@ public class GalleryServlet extends HttpServlet {
 		sb.append("<head>");
 		sb.append("<meta http-equiv=\"content-type\" content=\"text/html; charset=UTF-8\">");
 		sb.append("<link type=\"text/css\" rel=\"stylesheet\" href=\"css/bootstrap.css\">");
-		sb.append("<link type=\"text/css\" rel=\"stylesheet\" href=\"main.css?v8\">");
+		sb.append("<link type=\"text/css\" rel=\"stylesheet\" href=\"main.css?v9\">");
 		sb.append("<title>SSGallery</title>");
 		sb.append("<script type=\"text/javascript\" language=\"javascript\" src=\"gallery/gallery.nocache.js\"></script>");
 		sb.append("</head>");

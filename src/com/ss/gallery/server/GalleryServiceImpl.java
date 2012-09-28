@@ -330,15 +330,23 @@ public class GalleryServiceImpl implements GalleryService, GalleryServiceConfigu
 		File[] allThumbs = GalleryUtils.listJpegs(thumbs);
 		File[] allViews = GalleryUtils.listJpegs(thumbs);
 		File[] jpegs = GalleryUtils.listJpegs(folder);
+		long folderSize = 0L;
 		for (File jpeg : jpegs) {
-			if (!GalleryUtils.thumbExist(jpeg, allThumbs) || !GalleryUtils.thumbExist(jpeg, allViews)) {
+			File thumb = GalleryUtils.findThumb(jpeg, allThumbs);
+			File view = GalleryUtils.findThumb(jpeg, allViews);
+			if (thumb == null || view == null) {
 				continue;
 			}
 			String jpegName = jpeg.getName();
 			String jpegId = GalleryUtils.genId(jpeg.getName());
-			ServerImage gi = new ServerImage(jpegId, jpegName);
+			long l = jpeg.length();
+			ServerImage gi = new ServerImage(jpegId, jpegName, new ImageSizeInBytes(l, thumb.length(), view.length()));
 			images.add(gi);
+			folderSize += l;
 		}
+
+		gf.setImagesCount(images.size());
+		gf.setSizeInBytes(folderSize);
 
 		return gf;
 	}

@@ -62,13 +62,13 @@ public class CreateThumbsTask implements Runnable {
 		int scalledThumbs = 0;
 		int scalledViews = 0;
 		for (File jpeg : jpegs) {
-			if (!GalleryUtils.thumbExist(jpeg, thumbs)) {
+			if (GalleryUtils.findThumb(jpeg, thumbs) == null) {
 				boolean created = createThumb(jpeg, tdir, thumbSize);
 				if (created) {
 					scalledThumbs += 1;
 				}
 			}
-			if (!GalleryUtils.thumbExist(jpeg, views)) {
+			if (GalleryUtils.findThumb(jpeg, views) == null) {
 				boolean created = createThumb(jpeg, vdir, viewSize);
 				if (created) {
 					scalledViews += 1;

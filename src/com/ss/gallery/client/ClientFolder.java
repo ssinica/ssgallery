@@ -7,11 +7,15 @@ public class ClientFolder {
 	private String caption;
 	private String id;
 	private List<String> randomImagesList;
+	private long size;
+	private int imagesCount;
 
-	public ClientFolder(String id, String caption, List<String> randomImagesIds) {
+	public ClientFolder(String id, String caption, List<String> randomImagesIds, long size, int imagesCount) {
 		this.id = id;
 		this.caption = caption;
 		this.randomImagesList = randomImagesIds;
+		this.size = size;
+		this.imagesCount = imagesCount;
 	}
 
 	public String getCaption() {
@@ -49,6 +53,22 @@ public class ClientFolder {
 	@Override
 	public int hashCode() {
 		return id.hashCode();
+	}
+
+	public long getSize() {
+		return size;
+	}
+
+	public void setSize(long size) {
+		this.size = size;
+	}
+
+	public int getImagesCount() {
+		return imagesCount;
+	}
+
+	public void setImagesCount(int imagesCount) {
+		this.imagesCount = imagesCount;
 	}
 
 }

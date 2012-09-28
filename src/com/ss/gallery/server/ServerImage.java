@@ -4,10 +4,12 @@ public class ServerImage implements Comparable<ServerImage> {
 
 	private String name;
 	private String id;
+	private ImageSizeInBytes size;
 
-	public ServerImage(String id, String name) {
+	public ServerImage(String id, String name, ImageSizeInBytes size) {
 		this.name = name;
 		this.id = id;
+		this.size = size;
 	}
 
 	public String getName() {
@@ -24,6 +26,14 @@ public class ServerImage implements Comparable<ServerImage> {
 
 	public void setId(String id) {
 		this.id = id;
+	}
+
+	public ImageSizeInBytes getSize() {
+		return size;
+	}
+
+	public void setSize(ImageSizeInBytes size) {
+		this.size = size;
 	}
 
 	@Override

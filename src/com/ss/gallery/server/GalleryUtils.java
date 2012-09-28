@@ -21,15 +21,15 @@ public class GalleryUtils {
 		return FileFilterUtils.filter(new WildcardFileFilter(jpegFiles), dir.listFiles());
 	}
 
-	public static boolean thumbExist(File jpegFile, File[] thumbs) {
+	public static File findThumb(File jpegFile, File[] thumbs) {
 		String fileName = jpegFile.getName();
 		for (File thumb : thumbs) {
 			String thumbName = thumb.getName();
 			if (fileName.equals(thumbName)) {
-				return true;
+				return thumb;
 			}
 		}
-		return false;
+		return null;
 	}
 
 	public static File prepareDir(File dir, String dirName) {
