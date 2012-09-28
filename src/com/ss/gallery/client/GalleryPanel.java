@@ -646,6 +646,8 @@ public class GalleryPanel extends Composite implements
 		} else {
 			elName.setValue("");
 			setCurrentUser(name);
+
+			Window.Location.reload();
 		}
 	}
 
@@ -654,6 +656,7 @@ public class GalleryPanel extends Composite implements
 			@Override
 			public void onResponse(JSONObject json) {
 				setCurrentUser(null);
+				Window.Location.reload();
 			}
 		});
 	}
