@@ -40,7 +40,6 @@ public class GalleryServiceConfiguration implements ConfigurationListener {
 
 	private PropertiesConfiguration pc;
 	private List<DirectoryConfig> directories = new ArrayList<DirectoryConfig>();
-	private int threads = 3;
 	private String thumbDir;
 	private int thumbSize;
 	private String viewDir;
@@ -51,6 +50,12 @@ public class GalleryServiceConfiguration implements ConfigurationListener {
 	private List<GalleryUser> users = new ArrayList<GalleryUser>();
 	private long configReloadTimeout;
 	private String rootDirConfigFile;
+	private String imageMagickConvertCommand;
+
+	private int threadCountCheckThumbs;
+	private int threadCountConsumeResize;
+	private int threadCountResize;
+	private int threadResizeTimeout;
 
 	private Set<GalleryServiceConfigurationListener> listeners;
 	private ScheduledExecutorService threadPoolExecutor;
@@ -80,6 +85,34 @@ public class GalleryServiceConfiguration implements ConfigurationListener {
 			pc.addConfigurationListener(this);
 		} catch (ConfigurationException e) {
 			log.error("Failed to load configuration file. Default values will be used.", e);
+		}
+	}
+
+	private void loadProperties() {
+		try {
+
+			threadCountCheckThumbs = pc.getInt("app.thread.check.thumbs", 1);
+			threadCountConsumeResize = pc.getInt("app.thread.consume.resize", 1);
+			threadCountResize = pc.getInt("app.thread.resize.count", 1);
+			threadResizeTimeout = pc.getInt("app.thread.resize.timeout", 20);
+
+			thumbDir = pc.getString("app.thumb.dir", "thumbs");
+			thumbSize = pc.getInt("app.thumb.size", 180);
+			viewDir = pc.getString("app.view.dir", "views");
+			viewSize = pc.getInt("app.view.size", 800);
+			war = pc.getString("app.war", "/");
+			imagesChunkSize = pc.getInt("app.images.chunk.size", 6);
+			httpPort = pc.getInt("app.http.port", 8080);
+			configReloadTimeout = pc.getLong("app.config.reload.timeout", 30L);
+			rootDirConfigFile = pc.getString("app.root.dir.config.file", ".ssgallery.ini");
+			imageMagickConvertCommand = pc.getString("app.imagemagick.convert", "convert");
+
+			parseUsers();
+
+			directories = loadDirectories();
+
+		} catch (Exception e) {
+			log.error("Failed to parse gallery service configuration. Default values will be used", e);
 		}
 	}
 
@@ -136,31 +169,78 @@ public class GalleryServiceConfiguration implements ConfigurationListener {
 
 		if (!CollectionUtils.isEmpty(listeners)) {
 			for (GalleryServiceConfigurationListener listener : listeners) {
-				listener.onPathsChanged(newDirs, removedDirs, changedDirs);
+				listener.onPathsChanged();
 			}
 		}
 	}
 
-	private void loadProperties() {
-		try {
-			threads = pc.getInt("app.threads", 3);
-			thumbDir = pc.getString("app.thumb.dir", "thumbs");
-			thumbSize = pc.getInt("app.thumb.size", 180);
-			viewDir = pc.getString("app.view.dir", "views");
-			viewSize = pc.getInt("app.view.size", 800);
-			war = pc.getString("app.war", "/");
-			imagesChunkSize = pc.getInt("app.images.chunk.size", 6);
-			httpPort = pc.getInt("app.http.port", 8080);
-			configReloadTimeout = pc.getLong("app.config.reload.timeout", 30L);
-			rootDirConfigFile = pc.getString("app.root.dir.config.file", ".ssgallery.ini");
+	public String getImageMagickConvertCommand() {
+		return imageMagickConvertCommand;
+	}
 
-			parseUsers();
+	public List<DirectoryConfig> getPaths() {
+		return directories;
+	}
 
-			directories = loadDirectories();
+	public int getThreadCountCheckThumbs() {
+		return threadCountCheckThumbs;
+	}
 
-		} catch (Exception e) {
-			log.error("Failed to parse gallery service configuration. Default values will be used", e);
-		}
+	public int getThreadCountConsumeResize() {
+		return threadCountConsumeResize;
+	}
+
+	public int getThreadCountResize() {
+		return threadCountResize;
+	}
+
+	public int getThreadResizeTimeout() {
+		return threadResizeTimeout;
+	}
+
+	public String getThumbDir() {
+		return thumbDir;
+	}
+
+	public int getThumbSize() {
+		return thumbSize;
+	}
+
+	public String getViewDir() {
+		return viewDir;
+	}
+
+	public int getViewSize() {
+		return viewSize;
+	}
+
+	public String getWar() {
+		return war;
+	}
+
+	public int getImagesChunkSize() {
+		return imagesChunkSize;
+	}
+
+	public int getHttpPort() {
+		return httpPort;
+	}
+
+	public List<GalleryUser> getUsers() {
+		return users;
+	}
+
+	public long getConfigReloadTimeout() {
+		return configReloadTimeout;
+	}
+
+	private void startConfigurationChecker() {
+		threadPoolExecutor = Executors.newScheduledThreadPool(1);
+		threadPoolExecutor.scheduleAtFixedRate(new ConfigurationChecker(pc), 5, getConfigReloadTimeout(), TimeUnit.SECONDS);
+	}
+
+	public String getRootDirConfigFile() {
+		return rootDirConfigFile;
 	}
 
 	private void parseUsers() {
@@ -276,59 +356,6 @@ public class GalleryServiceConfiguration implements ConfigurationListener {
 
 		return priority;
 
-	}
-
-	public List<DirectoryConfig> getPaths() {
-		return directories;
-	}
-
-	public int getThreadsCount() {
-		return threads;
-	}
-
-	public String getThumbDir() {
-		return thumbDir;
-	}
-
-	public int getThumbSize() {
-		return thumbSize;
-	}
-
-	public String getViewDir() {
-		return viewDir;
-	}
-
-	public int getViewSize() {
-		return viewSize;
-	}
-
-	public String getWar() {
-		return war;
-	}
-
-	public int getImagesChunkSize() {
-		return imagesChunkSize;
-	}
-
-	public int getHttpPort() {
-		return httpPort;
-	}
-
-	public List<GalleryUser> getUsers() {
-		return users;
-	}
-
-	public long getConfigReloadTimeout() {
-		return configReloadTimeout;
-	}
-
-	private void startConfigurationChecker() {
-		threadPoolExecutor = Executors.newScheduledThreadPool(1);
-		threadPoolExecutor.scheduleAtFixedRate(new ConfigurationChecker(pc), 5, getConfigReloadTimeout(), TimeUnit.SECONDS);
-	}
-
-	public String getRootDirConfigFile() {
-		return rootDirConfigFile;
 	}
 
 	// -------------------------------------------------------------

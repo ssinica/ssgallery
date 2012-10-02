@@ -39,6 +39,7 @@ public class GalleryUtils {
 			return f;
 		}
 		if (f.mkdir()) {
+			f.setWritable(true, false);
 			return f;
 		} else {
 			return null;

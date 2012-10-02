@@ -20,7 +20,9 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.LogFactory;
 
-public class GalleryServiceImpl implements GalleryService, GalleryServiceConfigurationListener, CreateThumbsTask.Callback {
+import com.ss.gallery.server.transform.ImagesTransformService;
+
+public class GalleryServiceImpl implements GalleryService, GalleryServiceConfigurationListener {
 	
 	private static final org.apache.commons.logging.Log log = LogFactory.getLog(GalleryServiceImpl.class);
 	private static Random RANDOM = new Random();
@@ -28,6 +30,7 @@ public class GalleryServiceImpl implements GalleryService, GalleryServiceConfigu
 	private ExecutorService executor;
 	private GalleryContext ctx;
 	private GalleryServiceConfiguration config;
+	private ImagesTransformService imagesTransformService;
 
 	private SortedMap<ServerFolder, TreeSet<ServerImage>> data;
 
@@ -36,6 +39,7 @@ public class GalleryServiceImpl implements GalleryService, GalleryServiceConfigu
 		this.ctx = ctx;
 		this.config = ctx.getConfig();
 		this.config.addListener(this);
+		this.imagesTransformService = new ImagesTransformService(config);
 	}
 
 	@Override
@@ -43,9 +47,8 @@ public class GalleryServiceImpl implements GalleryService, GalleryServiceConfigu
 		startImpl();
 	}
 
-	@Override
 	//CreateThumbsTask.Callback
-	public void onCreateThumbsTaskFinished(String path) {
+	/*public void onCreateThumbsTaskFinished(String path) {
 		DirectoryConfig foundDirConfig = null;
 		List<DirectoryConfig> paths = config.getPaths();
 		for (DirectoryConfig p : paths) {
@@ -67,11 +70,11 @@ public class GalleryServiceImpl implements GalleryService, GalleryServiceConfigu
 			log.debug("Updated folder " + path + " images list");
 		}
 
-	}
+	}*/
 
 	@Override
 	// GalleryServiceConfigurationListener
-	public void onPathsChanged(List<DirectoryConfig> newDirs, List<DirectoryConfig> removedDirs, List<DirectoryConfig> changedDirs) {
+	public void onPathsChanged() {
 		rebuildModel();
 		createThumbsIfRequired();
 	}
@@ -257,8 +260,7 @@ public class GalleryServiceImpl implements GalleryService, GalleryServiceConfigu
 
 		// prepare executor
 		GalleryServiceConfiguration config = ctx.getConfig();
-		int threadsCount = config.getThreadsCount();
-		executor = Executors.newFixedThreadPool(threadsCount);
+		executor = Executors.newFixedThreadPool(config.getThreadCountCheckThumbs());
 
 		// build images model
 		rebuildModel();
@@ -300,10 +302,8 @@ public class GalleryServiceImpl implements GalleryService, GalleryServiceConfigu
 
 	private void createThumbsIfRequired(DirectoryConfig p) {
 		String thumbDir = config.getThumbDir();
-		int thumbSize = config.getThumbSize();
 		String viewDir = config.getViewDir();
-		int viewSize = config.getViewSize();
-		executor.execute(new CreateThumbsTask(p.getPath(), thumbDir, thumbSize, viewDir, viewSize, this));
+		executor.execute(new CheckThumbsTask(p.getPath(), thumbDir, viewDir, imagesTransformService));
 	}
 
 	private ServerFolder reloadFolder(DirectoryConfig folderConfig, TreeSet<ServerImage> images) {
