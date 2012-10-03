@@ -9,6 +9,9 @@ import org.apache.commons.io.filefilter.WildcardFileFilter;
 
 public class GalleryUtils {
 	
+	private static final String THUMB_POSTFIX = "-thumb";
+	private static final String VIEW_POSTFIX = "-view";
+
 	public static final String[] jpegFiles = new String[] { "*.jpg", "*.jpeg", "*.JPEG", "*.JPG" };
 
 	private GalleryUtils() {
@@ -21,15 +24,47 @@ public class GalleryUtils {
 		return FileFilterUtils.filter(new WildcardFileFilter(jpegFiles), dir.listFiles());
 	}
 
-	public static File findThumb(File jpegFile, File[] thumbs) {
-		String fileName = jpegFile.getName();
-		for (File thumb : thumbs) {
-			String thumbName = thumb.getName();
-			if (fileName.equals(thumbName)) {
-				return thumb;
-			}
-		}
-		return null;
+	public static String getThumbPath(String originalFileName, String folderId, String storePath) {
+		String normalizedFileName = normalizeThumbFileName(originalFileName);
+		return getThumbSrcImpl(normalizedFileName, folderId, storePath);
+	}
+
+	public static String getViewPath(String originalFileName, String folderId, String storePath) {
+		String normalizedFileName = normalizeViewFileName(originalFileName);
+		return getThumbSrcImpl(normalizedFileName, folderId, storePath);
+	}
+
+	public static String getThumbSrcImpl(String normalizedFileName, String folderId, String storePath) {
+		String pathToDirWithThumb = FilenameUtils.concat(storePath, folderId);
+		return FilenameUtils.concat(pathToDirWithThumb, normalizedFileName);
+	}
+
+	public static File getThumb(String originalFileName, String folderId, String storePath) {
+		String src = getThumbPath(originalFileName, folderId, storePath);
+		File f = new File(src);
+		return f.exists() ? f : null;
+	}
+
+	public static File getView(String originalFileName, String folderId, String storePath) {
+		String src = getViewPath(originalFileName, folderId, storePath);
+		File f = new File(src);
+		return f.exists() ? f : null;
+	}
+
+	public static String normalizeThumbFileName(String originalFileName) {
+		return normalizeFileNameImpl(originalFileName, THUMB_POSTFIX);
+	}
+
+	public static String normalizeViewFileName(String originalFileName) {
+		return normalizeFileNameImpl(originalFileName, VIEW_POSTFIX);
+	}
+
+	private static String normalizeFileNameImpl(String originalFileName, String postfix) {
+		originalFileName = originalFileName.toLowerCase();
+		originalFileName = genFolderId(originalFileName);
+		int concatSize = originalFileName.endsWith("jpeg") ? 5 : 4;
+		String name = originalFileName.substring(0, originalFileName.length() - concatSize);
+		return name + postfix + ".jpg";
 	}
 
 	public static File prepareDir(File dir, String dirName) {
@@ -78,7 +113,7 @@ public class GalleryUtils {
 		}
 	}
 
-	public static String genId(String fileName) {
+	public static String genFolderId(String fileName) {
 		fileName = fileName.replaceAll(" ", "_");
 		fileName = fileName.replaceAll("\\+", "_");
 		return fileName;

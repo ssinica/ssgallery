@@ -7,22 +7,18 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class ServerFolder implements Comparable<ServerFolder> {
 
 	private String caption;
-	private String path;
 	private String id;
+	private String path;
 	private int position = 0;
 	private List<String> users = null;
 	private int imagesCount = 0;
 	private long sizeInBytes;
 
-	public ServerFolder(String id, String caption, String path, int position, List<String> users) {
+	public ServerFolder(String id, String path, String caption, int position, List<String> users) {
 		this.caption = caption;
-		this.path = path;
 		this.id = id;
 		this.position = position;
 		this.users = users;
-	}
-
-	public void setPath(String path) {
 		this.path = path;
 	}
 
@@ -68,7 +64,6 @@ public class ServerFolder implements Comparable<ServerFolder> {
 	public String toString() {
 		return new ToStringBuilder(this)
 			.append("id: " + id)
-			.append("path: " + path)
 			.toString();
 	}
 

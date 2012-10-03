@@ -198,11 +198,9 @@ public class GalleryServiceImpl implements GalleryService, GalleryServiceConfigu
 		String path = "";
 		switch (size) {
 		case SMALL:
-			path = FilenameUtils.concat(folder.getPath(), config.getThumbDir());
-			return FilenameUtils.concat(path, image.getName());
+			return GalleryUtils.getThumbPath(image.getName(), folderId, config.getStorePath());
 		case MEDIUM:
-			path = FilenameUtils.concat(folder.getPath(), config.getViewDir());
-			return FilenameUtils.concat(path, image.getName());
+			return GalleryUtils.getViewPath(image.getName(), folderId, config.getStorePath());
 		case LARGE:
 			return FilenameUtils.concat(folder.getPath(), image.getName());
 		}
@@ -300,10 +298,13 @@ public class GalleryServiceImpl implements GalleryService, GalleryServiceConfigu
 		}
 	}
 
-	private void createThumbsIfRequired(DirectoryConfig p) {
-		String thumbDir = config.getThumbDir();
-		String viewDir = config.getViewDir();
-		executor.execute(new CheckThumbsTask(p.getPath(), thumbDir, viewDir, imagesTransformService));
+	private void createThumbsIfRequired(DirectoryConfig sf) {
+		File f = new File(sf.getPath());
+		if(!f.exists() || !f.isDirectory()) {
+			return;
+		}
+		String folderId = GalleryUtils.genFolderId(f.getName());
+		executor.execute(new CheckThumbsTask(folderId, sf.getPath(), imagesTransformService, config));
 	}
 
 	private ServerFolder reloadFolder(DirectoryConfig folderConfig, TreeSet<ServerImage> images) {
@@ -315,32 +316,21 @@ public class GalleryServiceImpl implements GalleryService, GalleryServiceConfigu
 		int position = folderConfig.getPosition();
 		String folderName = folder.getName();
 		String folderCaption = StringUtils.isEmpty(folderConfig.getCaption()) ? folderName : folderConfig.getCaption();
-		String id = GalleryUtils.genId(folderCaption);
-		ServerFolder gf = new ServerFolder(id, folderCaption, folder.getPath(), position, folderConfig.getUsers());
+		String id = GalleryUtils.genFolderId(folderName);
+		ServerFolder gf = new ServerFolder(id, folder.getPath(), folderCaption, position, folderConfig.getUsers());
 
-		String thumbDir = config.getThumbDir();
-		String viewDir = config.getViewDir();
-
-		File thumbs = GalleryUtils.getDir(folder, thumbDir);
-		File views = GalleryUtils.getDir(folder, viewDir);
-		if (thumbs == null || views == null) {
-			return gf;
-		}
-		
-		File[] allThumbs = GalleryUtils.listJpegs(thumbs);
-		File[] allViews = GalleryUtils.listJpegs(thumbs);
 		File[] jpegs = GalleryUtils.listJpegs(folder);
 		long folderSize = 0L;
 		for (File jpeg : jpegs) {
-			File thumb = GalleryUtils.findThumb(jpeg, allThumbs);
-			File view = GalleryUtils.findThumb(jpeg, allViews);
+			String name = jpeg.getName();
+			File thumb = GalleryUtils.getThumb(name, id, config.getStorePath());
+			File view = GalleryUtils.getView(name, id, config.getStorePath());
 			if (thumb == null || view == null) {
 				continue;
 			}
-			String jpegName = jpeg.getName();
-			String jpegId = GalleryUtils.genId(jpeg.getName());
+			String jpegId = GalleryUtils.genFolderId(name);
 			long l = jpeg.length();
-			ServerImage gi = new ServerImage(jpegId, jpegName, new ImageSizeInBytes(l, thumb.length(), view.length()));
+			ServerImage gi = new ServerImage(jpegId, name, new ImageSizeInBytes(l, thumb.length(), view.length()));
 			images.add(gi);
 			folderSize += l;
 		}

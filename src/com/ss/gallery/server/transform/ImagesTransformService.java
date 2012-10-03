@@ -1,16 +1,24 @@
 package com.ss.gallery.server.transform;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import com.ss.gallery.server.GalleryServiceConfiguration;
+import com.ss.gallery.server.GalleryUtils;
 
 /**
  * The service which transforms images.
@@ -39,7 +47,7 @@ public class ImagesTransformService {
 		consumerExecutor.submit(new TransformTaskConsumer());
 	}
 
-	public void addToResize(File sourceJpeg, boolean thumb, boolean view) {
+	public void addToResize(File sourceJpeg, String folderId, boolean thumb, boolean view) {
 
 		if (!thumb && !view) {
 			return;
@@ -47,20 +55,17 @@ public class ImagesTransformService {
 
 		String sourceFileName = sourceJpeg.getName();
 		String pathToJpeg = sourceJpeg.getPath();
-		String sourceJpegDir = sourceJpeg.getParent();
 		
 		// create thumb
 		if (thumb) {
-			String thumbDir = FilenameUtils.concat(sourceJpegDir, config.getThumbDir());
-			String thumbFilePath = FilenameUtils.concat(thumbDir, sourceFileName);
+			String thumbFilePath = GalleryUtils.getThumbPath(sourceFileName, folderId, config.getStorePath());
 			ImageTransformTask thumbTask = new ImageTransformTask(pathToJpeg, thumbFilePath, config.getThumbSize());
 			producerExecutor.submit(new TransformTaskProducer(thumbTask));
 		}
 
 		// create view
 		if (view) {
-			String viewDir = FilenameUtils.concat(sourceJpegDir, config.getViewDir());
-			String viewFilePath = FilenameUtils.concat(viewDir, sourceFileName);
+			String viewFilePath = GalleryUtils.getViewPath(sourceFileName, folderId, config.getStorePath());
 			ImageTransformTask viewTask = new ImageTransformTask(pathToJpeg, viewFilePath, config.getViewSize());
 			producerExecutor.submit(new TransformTaskProducer(viewTask));
 		}
@@ -109,9 +114,11 @@ public class ImagesTransformService {
 
 		private ImageTransformTask task;
 		private ImageTransformer transformer;
+		private GalleryServiceConfiguration config;
 
 		public TransformTaskExecutor(ImageTransformTask task, GalleryServiceConfiguration config) {
 			this.task = task;
+			this.config = config;
 			this.transformer = new ImageMagicImageTransformer(config);
 			//this.transformer = new ScalrImageTransformer();
 		}
@@ -120,14 +127,41 @@ public class ImagesTransformService {
 		public void run() {
 			log.debug("Starting to resize: " + task);
 			long startTime = System.currentTimeMillis();
-			File jpeg = new File(task.getSourceSrc());
+
+			InputStream is = null;
+			OutputStream os = null;
+			File tmpCopy = null;
 			try {
-				transformer.resize(jpeg, task.getDestSrc(), task.getWidth());
+				File originalJpeg = new File(task.getSourceSrc());
+				String tmpFilePath = FilenameUtils.concat(config.getTmpPath(), System.currentTimeMillis() + ".jpg");
+				tmpCopy = new File(tmpFilePath);
+				is = new FileInputStream(originalJpeg);
+				os = new FileOutputStream(tmpCopy);
+				IOUtils.copy(is, os);
+
+				transformer.resize(tmpCopy, task.getDestSrc(), task.getWidth());
+
+				long executionTime = System.currentTimeMillis() - startTime;
+				log.debug("Finished to resize (" + executionTime + "ms): " + task);
+
+			} catch (FileNotFoundException e) {
+				log.error("Failed to resize image: " + task, e);
+			} catch (IOException e) {
+				log.error("Failed to resize image: " + task, e);
 			} catch (ImageTransformException e) {
 				log.error("Failed to resize image: " + task, e);
-			}			
-			long executionTime = System.currentTimeMillis() - startTime;
-			log.debug("Finished to resize (" + executionTime + "ms): " + task);
+			} finally {
+				IOUtils.closeQuietly(is);
+				IOUtils.closeQuietly(os);
+				if (tmpCopy != null) {
+					String tmpPath = tmpCopy.getPath();
+					try {
+						tmpCopy.delete();
+					} catch (Exception e) {
+						log.debug("Failed to delete tmp file " + tmpPath);
+					}
+				}
+			}
 		}
 
 	}

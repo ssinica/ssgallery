@@ -40,9 +40,9 @@ public class GalleryServiceConfiguration implements ConfigurationListener {
 
 	private PropertiesConfiguration pc;
 	private List<DirectoryConfig> directories = new ArrayList<DirectoryConfig>();
-	private String thumbDir;
+	private String storePath;
+	private String tmpPath;
 	private int thumbSize;
-	private String viewDir;
 	private int viewSize;
 	private String war;
 	private int imagesChunkSize;
@@ -96,9 +96,9 @@ public class GalleryServiceConfiguration implements ConfigurationListener {
 			threadCountResize = pc.getInt("app.thread.resize.count", 1);
 			threadResizeTimeout = pc.getInt("app.thread.resize.timeout", 20);
 
-			thumbDir = pc.getString("app.thumb.dir", "thumbs");
+			storePath = pc.getString("app.store.path", "");
+			tmpPath = pc.getString("app.tmp.path", "");
 			thumbSize = pc.getInt("app.thumb.size", 180);
-			viewDir = pc.getString("app.view.dir", "views");
 			viewSize = pc.getInt("app.view.size", 800);
 			war = pc.getString("app.war", "/");
 			imagesChunkSize = pc.getInt("app.images.chunk.size", 6);
@@ -174,6 +174,10 @@ public class GalleryServiceConfiguration implements ConfigurationListener {
 		}
 	}
 
+	public String getTmpPath() {
+		return tmpPath;
+	}
+
 	public String getImageMagickConvertCommand() {
 		return imageMagickConvertCommand;
 	}
@@ -198,16 +202,12 @@ public class GalleryServiceConfiguration implements ConfigurationListener {
 		return threadResizeTimeout;
 	}
 
-	public String getThumbDir() {
-		return thumbDir;
-	}
-
 	public int getThumbSize() {
 		return thumbSize;
 	}
 
-	public String getViewDir() {
-		return viewDir;
+	public String getStorePath() {
+		return storePath;
 	}
 
 	public int getViewSize() {

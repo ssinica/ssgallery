@@ -3,7 +3,6 @@ package com.ss.gallery.server;
 import java.io.File;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -18,54 +17,35 @@ public class CheckThumbsTask implements Runnable {
 
 	private static final Log log = LogFactory.getLog(CheckThumbsTask.class);
 
-	private String path;
-	private String normalizedPath;
-	private String thumbDir;
-	private String viewDir;
 	private ImagesTransformService imagesTransformService;
+	private GalleryServiceConfiguration config;
+	private String folderPath;
+	private String folderId;
 
-	public CheckThumbsTask(String path, String thumbsDir, String viewDir, ImagesTransformService imagesTransformService) {
-		this.path = path;
-		this.thumbDir = thumbsDir;
-		this.viewDir = viewDir;
+	public CheckThumbsTask(String folderId, String folderPath, ImagesTransformService imagesTransformService, GalleryServiceConfiguration config) {
 		this.imagesTransformService = imagesTransformService;
+		this.folderPath = folderPath;
+		this.folderId = folderId;
+		this.config = config;
 	}
 
 	@Override
 	public void run() {
 		long start = System.nanoTime();
-		log.info("Checking thumbs in " + path);
-		normalizedPath = FilenameUtils.normalize(path);
-		File dir = new File(normalizedPath);
-		if (!dir.isDirectory()) {
-			log.error("Failed to check thumbs. " + path + " is not a directory.");
+
+		String storePath = config.getStorePath();
+		File storeRootDir = new File(storePath);
+		File storeDir = GalleryUtils.prepareDir(storeRootDir, folderId);
+		if (storeDir == null) {
+			log.error("Failed to create store dir for folder = " + folderId);
 			return;
 		}
 
-		if (normalizedPath.contains(" ")) {
-			log.error("Invalid path " + normalizedPath + ". No spaces in path are allowed");
-		}
-
-		File tdir = GalleryUtils.prepareDir(dir, thumbDir);
-		if (tdir == null) {
-			log.error("Failed to create thumbs dir.");
-			return;
-		}
-
-		File vdir = GalleryUtils.prepareDir(dir, viewDir);
-		if (vdir == null) {
-			log.error("Failed to create view dir.");
-			return;
-		}
-
-		File[] jpegs = GalleryUtils.listJpegs(dir);
-		File[] thumbs = GalleryUtils.listJpegs(tdir);
-		File[] views = GalleryUtils.listJpegs(vdir);
+		File[] jpegs = GalleryUtils.listJpegs(new File(folderPath));
 
 		for (File jpeg : jpegs) {
 
-			File fileToProcess = jpeg;
-
+			/*File fileToProcess = jpeg;
 			String currentJpegName = jpeg.getName();
 			if (currentJpegName.contains(" ")) {
 				String newJpegName = currentJpegName.replaceAll(" ", "_");
@@ -76,19 +56,18 @@ public class CheckThumbsTask implements Runnable {
 					log.debug("Filed to rename file " + currentJpegName + " to " + newJpegName);
 					fileToProcess = null;
 				}
-			}
+			}*/
 
-			if (fileToProcess != null) {
-				boolean hasThumb = GalleryUtils.findThumb(jpeg, thumbs) != null;
-				boolean hasView = GalleryUtils.findThumb(jpeg, views) != null;
-				if (!hasThumb || !hasView) {
-					imagesTransformService.addToResize(jpeg, !hasThumb, !hasView);
-				}
+			String originalFileName = jpeg.getName();
+			File thumb = GalleryUtils.getThumb(originalFileName, folderId, storePath);
+			File view = GalleryUtils.getView(originalFileName, folderId, storePath);
+			if (thumb == null || view == null) {
+				imagesTransformService.addToResize(jpeg, folderId, thumb == null, view == null);
 			}
 		}
 		
 		long elapsed = System.nanoTime() - start;
-		log.info("Thumbs check in dir " + path + " finished within " + TimeUnit.NANOSECONDS.toMillis(elapsed) + " ms.");
+		log.info("Thumbs check in dir " + folderId + " finished within " + TimeUnit.NANOSECONDS.toMillis(elapsed) + " ms.");
 	}
 
 }

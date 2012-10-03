@@ -33,12 +33,12 @@ public class ImageMagicImageTransformer implements ImageTransformer {
 
 		String sourcePath = jpeg.getPath();
 		if (sourcePath.contains(" ")) {
-			log.error("Path " + sourcePath + " contains spaces. Image resize aborted");
+			log.error("Source path " + sourcePath + " contains spaces. Image resize aborted");
 			return;
 		}
 
 		if (destFile.contains(" ")) {
-			log.error("Path " + sourcePath + " contains spaces. Image resize aborted");
+			log.error("Disctination path " + destFile + " contains spaces. Image resize aborted");
 			return;
 		}
 
