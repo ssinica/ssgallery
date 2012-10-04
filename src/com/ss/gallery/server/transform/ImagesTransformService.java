@@ -35,9 +35,11 @@ public class ImagesTransformService {
 	private ExecutorService consumerExecutor;
 	private ExecutorService transformExecutor;
 	private ExecutorService producerExecutor;
+	private ImagesTransformServiceListener listener;
 
-	public ImagesTransformService(GalleryServiceConfiguration config) {
+	public ImagesTransformService(GalleryServiceConfiguration config, ImagesTransformServiceListener listener) {
 		this.config = config;
+		this.listener = listener;
 		this.transformTasks = new LinkedBlockingQueue<ImageTransformTask>(10);
 
 		consumerExecutor = Executors.newFixedThreadPool(config.getThreadCountConsumeResize());
@@ -59,14 +61,14 @@ public class ImagesTransformService {
 		// create thumb
 		if (thumb) {
 			String thumbFilePath = GalleryUtils.getThumbPath(sourceFileName, folderId, config.getStorePath());
-			ImageTransformTask thumbTask = new ImageTransformTask(pathToJpeg, thumbFilePath, config.getThumbSize());
+			ImageTransformTask thumbTask = new ImageTransformTask(pathToJpeg, thumbFilePath, config.getThumbSize(), folderId, sourceFileName);
 			producerExecutor.submit(new TransformTaskProducer(thumbTask));
 		}
 
 		// create view
 		if (view) {
 			String viewFilePath = GalleryUtils.getViewPath(sourceFileName, folderId, config.getStorePath());
-			ImageTransformTask viewTask = new ImageTransformTask(pathToJpeg, viewFilePath, config.getViewSize());
+			ImageTransformTask viewTask = new ImageTransformTask(pathToJpeg, viewFilePath, config.getViewSize(), folderId, sourceFileName);
 			producerExecutor.submit(new TransformTaskProducer(viewTask));
 		}
 	}
@@ -144,6 +146,10 @@ public class ImagesTransformService {
 				long executionTime = System.currentTimeMillis() - startTime;
 				log.debug("Finished to resize (" + executionTime + "ms): " + task);
 
+				if(listener != null) {
+					listener.onImageResized(task.getFolderId(), task.getSourceFileName(), task.getSourceSrc());
+				}
+				
 			} catch (FileNotFoundException e) {
 				log.error("Failed to resize image: " + task, e);
 			} catch (IOException e) {
@@ -164,6 +170,10 @@ public class ImagesTransformService {
 			}
 		}
 
+	}
+
+	public static interface ImagesTransformServiceListener {
+		void onImageResized(String folderId, String sourceFileName, String sourceFilePath);
 	}
 
 }

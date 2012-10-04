@@ -11,7 +11,6 @@ public class ServerFolder implements Comparable<ServerFolder> {
 	private String path;
 	private int position = 0;
 	private List<String> users = null;
-	private int imagesCount = 0;
 	private long sizeInBytes;
 
 	public ServerFolder(String id, String path, String caption, int position, List<String> users) {
@@ -88,14 +87,6 @@ public class ServerFolder implements Comparable<ServerFolder> {
 
 	public void setUsers(List<String> users) {
 		this.users = users;
-	}
-
-	public int getImagesCount() {
-		return imagesCount;
-	}
-
-	public void setImagesCount(int imagesCount) {
-		this.imagesCount = imagesCount;
 	}
 
 	public void setSizeInBytes(long folderSize) {

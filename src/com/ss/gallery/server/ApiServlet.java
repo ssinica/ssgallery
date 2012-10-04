@@ -129,7 +129,7 @@ public class ApiServlet extends HttpServlet {
 		HashMap<String, Object> folderData = new HashMap<String, Object>();
 		folderData.put("caption", folder.getCaption());
 		folderData.put("id", folder.getId());
-		folderData.put("imagesCount", folder.getImagesCount());
+		folderData.put("imagesCount", chunk.getTotalImagesCount());
 		folderData.put("folderSize", folder.getSizeInBytes());
 
 		ServerImage nextImage = chunk.getNextImage();
@@ -165,9 +165,9 @@ public class ApiServlet extends HttpServlet {
 				continue;
 			}
 
-			List<ServerImage> images = gs.getRandomImagesFrom(folder, collageImagesCount);
-			List<String> imagesJsonData = new ArrayList<String>(images.size());
-			for (ServerImage img : images) {
+			ImagesChunk chunk = gs.getRandomImagesFrom(folder, collageImagesCount);
+			List<String> imagesJsonData = new ArrayList<String>(chunk.getImages().size());
+			for (ServerImage img : chunk.getImages()) {
 				imagesJsonData.add(img.getId());
 			}
 
@@ -175,7 +175,7 @@ public class ApiServlet extends HttpServlet {
 			folderData.put("caption", folder.getCaption());
 			folderData.put("id", folder.getId());
 			folderData.put("images", imagesJsonData);
-			folderData.put("imagesCount", folder.getImagesCount());
+			folderData.put("imagesCount", chunk.getTotalImagesCount());
 			folderData.put("folderSize", folder.getSizeInBytes());
 
 			foldersData.add(folderData);

@@ -7,11 +7,15 @@ public class ImageTransformTask {
 	private String sourceSrc;
 	private String destSrc;
 	private int width;
+	private String folderId;
+	private String sourceFileName;
 
-	public ImageTransformTask(String sourceSrc, String destSrc, int width) {
+	public ImageTransformTask(String sourceSrc, String destSrc, int width, String folderId, String sourceFileName) {
 		this.sourceSrc = sourceSrc;
 		this.destSrc = destSrc;
 		this.width = width;
+		this.folderId = folderId;
+		this.sourceFileName = sourceFileName;
 	}
 
 	public String getSourceSrc() {
@@ -36,6 +40,14 @@ public class ImageTransformTask {
 
 	public void setWidth(int width) {
 		this.width = width;
+	}
+
+	public String getFolderId() {
+		return folderId;
+	}
+
+	public String getSourceFileName() {
+		return sourceFileName;
 	}
 
 	@Override

@@ -22,7 +22,7 @@ import org.apache.commons.logging.LogFactory;
 
 import com.ss.gallery.server.transform.ImagesTransformService;
 
-public class GalleryServiceImpl implements GalleryService, GalleryServiceConfigurationListener {
+public class GalleryServiceImpl implements GalleryService, GalleryServiceConfigurationListener, ImagesTransformService.ImagesTransformServiceListener {
 	
 	private static final org.apache.commons.logging.Log log = LogFactory.getLog(GalleryServiceImpl.class);
 	private static Random RANDOM = new Random();
@@ -39,38 +39,13 @@ public class GalleryServiceImpl implements GalleryService, GalleryServiceConfigu
 		this.ctx = ctx;
 		this.config = ctx.getConfig();
 		this.config.addListener(this);
-		this.imagesTransformService = new ImagesTransformService(config);
+		this.imagesTransformService = new ImagesTransformService(config, this);
 	}
 
 	@Override
 	public void start() {
 		startImpl();
 	}
-
-	//CreateThumbsTask.Callback
-	/*public void onCreateThumbsTaskFinished(String path) {
-		DirectoryConfig foundDirConfig = null;
-		List<DirectoryConfig> paths = config.getPaths();
-		for (DirectoryConfig p : paths) {
-			if (p.getPath().equals(path)) {
-				foundDirConfig = p;
-				break;
-			}
-		}
-		if (foundDirConfig == null) {
-			log.debug("Path " + path + " is found in configuration. Folder will not be reloaded.");
-			return;
-		}
-		
-		TreeSet<ServerImage> images = new TreeSet<ServerImage>();
-		ServerFolder folder = reloadFolder(foundDirConfig, images);
-
-		if (folder != null) {
-			data.put(folder, images);
-			log.debug("Updated folder " + path + " images list");
-		}
-
-	}*/
 
 	@Override
 	// GalleryServiceConfigurationListener
@@ -223,15 +198,22 @@ public class GalleryServiceImpl implements GalleryService, GalleryServiceConfigu
 	}
 
 	@Override
-	public List<ServerImage> getRandomImagesFrom(ServerFolder folder, int count) {
+	public ImagesChunk getRandomImagesFrom(ServerFolder folder, int count) {
+		
+		ImagesChunk ret = new ImagesChunk();
+		ret.setFolder(folder);
+		
 		TreeSet<ServerImage> images = data.get(folder);
 		if (images == null) {
-			return Collections.emptyList();
+			ret.setImages(Collections.<ServerImage> emptyList());
+			return ret;
 		}
 
 		int size = images.size();
+		ret.setTotalImagesCount(size);
 		if (size < count) {
-			return new ArrayList<ServerImage>(images);
+			ret.setImages(new ArrayList<ServerImage>(images));
+			return ret;
 		}
 
 		ServerImage[] array = images.toArray(new ServerImage[size]);
@@ -240,7 +222,8 @@ public class GalleryServiceImpl implements GalleryService, GalleryServiceConfigu
 			int idx = RANDOM.nextInt(size);
 			res.add(array[idx]);
 		}
-		return res;
+		ret.setImages(res);
+		return ret;
 	}
 
 	// -----------------------------------------------------------------
@@ -291,6 +274,40 @@ public class GalleryServiceImpl implements GalleryService, GalleryServiceConfigu
 		log.info("Folder model build in " + TimeUnit.NANOSECONDS.toMillis(elapsed) + " ms.");
 	}
 
+	@Override
+	public void onImageResized(String folderId, String sourceFileName, String sourceFilePath) {
+		ServerFolder folder = getFolderById(folderId);
+		if (folder == null) {
+			return;
+		}
+
+		File thumb = GalleryUtils.getThumb(sourceFileName, folderId, config.getStorePath());
+		File view = GalleryUtils.getView(sourceFileName, folderId, config.getStorePath());
+		if (thumb == null || view == null) {
+			return;
+		}
+
+		File jpeg = new File(sourceFilePath);
+		if (!jpeg.exists()) {
+			return;
+		}
+
+		String jpegId = GalleryUtils.genFolderId(sourceFileName);
+		long l = jpeg.length();
+		ServerImage image = new ServerImage(jpegId, sourceFileName, new ImageSizeInBytes(l, thumb.length(), view.length()));
+
+		addImageToFolder(folder, image);
+	}
+
+	private synchronized void addImageToFolder(ServerFolder folder, ServerImage image) {
+		TreeSet<ServerImage> images = data.get(folder);
+		if (images.add(image)) {
+			folder.setSizeInBytes(folder.getSizeInBytes() + image.getSize().getOriginalSize());
+			data.put(folder, images);
+			log.debug("Image " + image + " added to folder " + folder);
+		}
+	}
+
 	private void createThumbsIfRequired() {
 		List<DirectoryConfig> paths = config.getPaths();
 		for (DirectoryConfig p : paths) {
@@ -334,8 +351,6 @@ public class GalleryServiceImpl implements GalleryService, GalleryServiceConfigu
 			images.add(gi);
 			folderSize += l;
 		}
-
-		gf.setImagesCount(images.size());
 		gf.setSizeInBytes(folderSize);
 
 		return gf;
