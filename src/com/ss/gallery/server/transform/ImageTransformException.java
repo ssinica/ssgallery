@@ -7,6 +7,10 @@ public class ImageTransformException extends Exception {
 
 	}
 
+	public ImageTransformException(String msg) {
+		super(msg);
+	}
+
 	public ImageTransformException(String msg, Throwable cause) {
 		super(msg, cause);
 	}

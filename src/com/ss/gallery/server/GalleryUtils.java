@@ -120,6 +120,9 @@ public class GalleryUtils {
 	}
 
 	public static boolean canUserViewFolder(String name, ServerFolder folder) {
+		if (folder == null) {
+			return false;
+		}
 		List<String> users = folder.getUsers();
 		if (users == null || users.size() == 0) {
 			return true;
@@ -128,6 +131,10 @@ public class GalleryUtils {
 			return false;
 		}
 		return users.contains(name);
+	}
+
+	public static synchronized String getTmpFileNameBase() {
+		return String.valueOf(System.currentTimeMillis());
 	}
 
 }

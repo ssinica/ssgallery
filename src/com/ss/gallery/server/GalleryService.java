@@ -2,6 +2,8 @@ package com.ss.gallery.server;
 
 import java.util.Set;
 
+import com.ss.gallery.server.transform.ImageTransformException;
+
 
 public interface GalleryService {
 
@@ -20,5 +22,7 @@ public interface GalleryService {
 	ImagesChunk loadPrevImagesChunk(String folderId, String startImageId);
 
 	ImagesChunk getRandomImagesFrom(ServerFolder folder, int count);
+
+	void rotateImage(String imageId, String folderId, RotateDirection direction) throws ImageTransformException;
 
 }

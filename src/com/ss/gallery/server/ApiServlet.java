@@ -16,6 +16,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import com.google.gson.JsonObject;
+import com.ss.gallery.server.transform.ImageTransformException;
 import com.ss.gallery.shared.Actions;
 
 @SuppressWarnings("serial")
@@ -61,6 +62,35 @@ public class ApiServlet extends HttpServlet {
 			login(json, req, resp);
 		} else if (Actions.LOGOUT.equals(action)) {
 			logout(json, req, resp);
+		} else if (Actions.ROTATE.equals(action)) {
+			rotate(json, req, resp);
+		}
+	}
+
+	private void rotate(JsonObject json, HttpServletRequest req, HttpServletResponse resp) throws IOException {
+		String imageId = ServerJsonHelper.getString("imageId", json);
+		String folderId = ServerJsonHelper.getString("folderId", json);
+		String direction = ServerJsonHelper.getString("direction", json);
+
+		if (!"left".equals(direction) && !"right".equals(direction)) {
+			writeResponseData("{}", resp);
+			return;
+		}
+
+		ServerFolder folder = gs.getFolderById(folderId);
+
+		if (!GalleryUtils.canUserViewFolder(ctx.getLoggedInUser(req), folder)) {
+			writeResponseData("{}", resp);
+			return;
+		}
+
+		RotateDirection rotateTo = "left".equals(direction) ? RotateDirection.LEFT : RotateDirection.RIGHT;
+		try {
+			gs.rotateImage(imageId, folderId, rotateTo);
+			writeResponseData("{}", resp);
+		} catch (ImageTransformException e) {
+			log.error("Failed to rotate image", e);
+			printError("Failed to rotate image", resp);
 		}
 	}
 

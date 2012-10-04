@@ -5,11 +5,13 @@ public class ServerImage implements Comparable<ServerImage> {
 	private String name;
 	private String id;
 	private ImageSizeInBytes size;
+	private String path;
 
-	public ServerImage(String id, String name, ImageSizeInBytes size) {
+	public ServerImage(String id, String name, String path, ImageSizeInBytes size) {
 		this.name = name;
 		this.id = id;
 		this.size = size;
+		this.path = path;
 	}
 
 	public String getName() {
@@ -62,5 +64,9 @@ public class ServerImage implements Comparable<ServerImage> {
 	@Override
 	public int compareTo(ServerImage o) {
 		return name.compareToIgnoreCase(o.getName());
+	}
+
+	public String getPath() {
+		return path;
 	}
 }

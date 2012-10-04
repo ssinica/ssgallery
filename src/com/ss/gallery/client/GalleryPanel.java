@@ -10,6 +10,7 @@ import java.util.RandomAccess;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.DivElement;
 import com.google.gwt.dom.client.Element;
+import com.google.gwt.dom.client.ImageElement;
 import com.google.gwt.dom.client.InputElement;
 import com.google.gwt.dom.client.NativeEvent;
 import com.google.gwt.dom.client.SpanElement;
@@ -53,6 +54,8 @@ public class GalleryPanel extends Composite implements
 	private static final String UID_SMALL_IMAGE_CLICK = "uid-sic";
 	private static final String UID_LOGIN = "uid-login";
 	private static final String UID_LOGOUT = "uid-logout";
+	private static final String UID_ROTATE_LEFT = "uid-rotate-left";
+	private static final String UID_ROTATE_RIGHT = "uid-rotate-right";
 	
 	private static final String ID_NEXT_SMALL = "id-nsi";
 	private static final String ID_PREV_SMALL = "id-psi";
@@ -266,14 +269,16 @@ public class GalleryPanel extends Composite implements
 
 		// set big photo
 		clearBigPhotoWrapper();
-		String bigPhotoSrc = "<img src='" + GalleryClientUtils.genMediumImageSrc(folderId, selectedImageId) + "'></img>";
-		bigPhotoSrc += "<div class='bf-down-w'>";
-		bigPhotoSrc += "<a class='bf-down' href='"
-				+ GalleryClientUtils
-						.genLargeImageSrc(folderId, selectedImageId)
- + "'>скачать в полном размере</a>";
-		bigPhotoSrc += "</div>";
-		final String bigPhotoHtml = bigPhotoSrc;
+		StringBuilder sb = new StringBuilder();
+		sb.append("<div class='bf-iw'>");
+			sb.append("<div uid='" + UID_ROTATE_LEFT + "' class='bf-act bf-act-rl'></div>");
+			sb.append("<div uid='" + UID_ROTATE_RIGHT + "' class='bf-act bf-act-rr'></div>");
+			sb.append("<img id='big-" + selectedImageId + "' src='" + GalleryClientUtils.genMediumImageSrc(folderId, selectedImageId) + "'></img>");
+		sb.append("</div>");
+		sb.append("<div class='bf-down-w'>");
+		sb.append("<a class='bf-down' href='" + GalleryClientUtils.genLargeImageSrc(folderId, selectedImageId) + "'>скачать в полном размере</a>");
+		sb.append("</div>");
+		final String bigPhotoHtml = sb.toString();
 		new Timer() {
 			@Override
 			public void run() {
@@ -401,7 +406,7 @@ public class GalleryPanel extends Composite implements
 					html += "<div class='arrow-point arrow-point-9'></div>";
 				html += "</div>";	
 				}	
-				html += "<img src='" + GalleryClientUtils.genSmallImageSrc(folderId, image.getId()) + "'></img>";				
+				html += "<img id='" + "small-" + image.getId() + "' src='" + GalleryClientUtils.genSmallImageSrc(folderId, image.getId()) + "'></img>";				
 			html += "</div>";
 		html += "</li>";
 		return html;
@@ -503,6 +508,10 @@ public class GalleryPanel extends Composite implements
 			login();
 		} else if (UID_LOGOUT.equals(uid)) {
 			logout();
+		} else if (UID_ROTATE_LEFT.equals(uid)) {
+			rotate(true);
+		} else if (UID_ROTATE_RIGHT.equals(uid)) {
+			rotate(false);
 		}
 	}
 
@@ -671,6 +680,26 @@ public class GalleryPanel extends Composite implements
 			elLoggedWrapper.getStyle().setDisplay(Display.BLOCK);
 			elLoginWrapper.getStyle().setDisplay(Display.NONE);
 		}
+	}
+
+	private void rotate(boolean left) {
+		new AjaxRequest(Actions.ROTATE)
+			.addParam("imageId", selectedImageId)
+			.addParam("folderId", selectedFolder.getId())
+			.addParam("direction", left ? "left" : "right")
+			.send(new AjaxCallback() {
+				@Override
+			    public void onResponse(JSONObject json) {
+				    ImageElement el = DOM.getElementById("big-" + selectedImageId).cast();
+				    String src = el.getSrc();
+				    el.setSrc(src + "&time=" + System.currentTimeMillis());
+					
+					ImageElement el2 = DOM.getElementById("small-" + selectedImageId).cast();
+					String src2 = el2.getSrc();
+					el2.setSrc(src2  + "&time=" + System.currentTimeMillis());
+				}
+		});
+
 	}
 
 }

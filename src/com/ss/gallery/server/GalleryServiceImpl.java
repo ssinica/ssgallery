@@ -20,6 +20,7 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.LogFactory;
 
+import com.ss.gallery.server.transform.ImageTransformException;
 import com.ss.gallery.server.transform.ImagesTransformService;
 
 public class GalleryServiceImpl implements GalleryService, GalleryServiceConfigurationListener, ImagesTransformService.ImagesTransformServiceListener {
@@ -156,16 +157,7 @@ public class GalleryServiceImpl implements GalleryService, GalleryServiceConfigu
 	@Override
 	public String getPathToImage(String folderId, String imageId, ImageSize size) {
 		ServerFolder folder = getFolderById(folderId);
-		if (folder == null) {
-			return "";
-		}
-		ServerImage image = null;
-		for (ServerImage im : data.get(folder)) {
-			if (im.getId().equals(imageId)) {
-				image = im;
-				break;
-			}
-		}
+		ServerImage image = findImage(imageId, folder);
 		if (image == null) {
 			return "";
 		}
@@ -224,6 +216,36 @@ public class GalleryServiceImpl implements GalleryService, GalleryServiceConfigu
 		}
 		ret.setImages(res);
 		return ret;
+	}
+
+	@Override
+	public void rotateImage(String imageId, String folderId, RotateDirection direction) throws ImageTransformException {
+		ServerImage image = findImage(imageId, folderId);
+		if (image == null) {
+			return;
+		}
+		imagesTransformService.rotateImage(image.getPath(), folderId, direction);
+	}
+
+	private ServerImage findImage(String imageId, String folderId) {
+		ServerFolder folder = getFolderById(folderId);
+		if (folder == null) {
+			return null;
+		} else {
+			return findImage(imageId, folder);
+		}
+	}
+
+	private ServerImage findImage(String imageId, ServerFolder folder) {
+		if (folder == null) {
+			return null;
+		}
+		for (ServerImage im : data.get(folder)) {
+			if (im.getId().equals(imageId)) {
+				return im;
+			}
+		}
+		return null;
 	}
 
 	// -----------------------------------------------------------------
@@ -294,7 +316,7 @@ public class GalleryServiceImpl implements GalleryService, GalleryServiceConfigu
 
 		String jpegId = GalleryUtils.genFolderId(sourceFileName);
 		long l = jpeg.length();
-		ServerImage image = new ServerImage(jpegId, sourceFileName, new ImageSizeInBytes(l, thumb.length(), view.length()));
+		ServerImage image = new ServerImage(jpegId, sourceFileName, sourceFilePath, new ImageSizeInBytes(l, thumb.length(), view.length()));
 
 		addImageToFolder(folder, image);
 	}
@@ -347,7 +369,7 @@ public class GalleryServiceImpl implements GalleryService, GalleryServiceConfigu
 			}
 			String jpegId = GalleryUtils.genFolderId(name);
 			long l = jpeg.length();
-			ServerImage gi = new ServerImage(jpegId, name, new ImageSizeInBytes(l, thumb.length(), view.length()));
+			ServerImage gi = new ServerImage(jpegId, name, jpeg.getPath(), new ImageSizeInBytes(l, thumb.length(), view.length()));
 			images.add(gi);
 			folderSize += l;
 		}

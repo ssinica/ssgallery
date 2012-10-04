@@ -157,12 +157,39 @@ body {
 	-o-transition-delay: 0s;
 	transition-delay: 0s;
 }
-
-.bf-w img {
+.bf-iw {
+    position: relative;	
+    display: inline-block;
+}	
+.bf-iw img {
 	-webkit-box-shadow: 0 0 3px 2px #ECF2F4;
 	-moz-box-shadow: 0 0 3px 2px #ECF2F4;
 	box-shadow: 0 0 3px 2px #ECF2F4;
 }
+.bf-act {
+    width: 50px;
+    height: 50px;
+    position: absolute;
+    top: 5px;
+    opacity: 0.3;
+    z-index: 60;	
+    display: none;
+    cursor: pointer;
+    }
+    .bf-act:hover {
+        opacity: 0.6;
+    }
+    .bf-act-rl {
+        left: 10px;
+        background-image: url(/img/left.png);
+    }
+    .bf-act-rr {
+        right: 10px;
+        background-image: url(/img/right.png);
+    }
+    .bf-iw:hover .bf-act {
+        display: block;        
+    }
 
 .bf-down-w {
 	padding-top: 10px;

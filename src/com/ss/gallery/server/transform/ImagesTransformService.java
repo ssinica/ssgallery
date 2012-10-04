@@ -19,6 +19,7 @@ import org.apache.commons.logging.LogFactory;
 
 import com.ss.gallery.server.GalleryServiceConfiguration;
 import com.ss.gallery.server.GalleryUtils;
+import com.ss.gallery.server.RotateDirection;
 
 /**
  * The service which transforms images.
@@ -75,6 +76,78 @@ public class ImagesTransformService {
 
 	private void executeTask(ImageTransformTask task) {
 		transformExecutor.submit(new TransformTaskExecutor(task, config));
+	}
+
+	private String genRotateCommand(String filePath, RotateDirection direction) {
+		return config.getImageMagickConvertCommand() + " " + filePath + " -rotate " + direction.getAngle() + " " + filePath;
+	}
+
+	public void rotateImage(String originalImagePath, String folderId, RotateDirection direction) throws ImageTransformException {
+		long startTime = System.currentTimeMillis();
+
+		InputStream is = null;
+		OutputStream os = null;
+		File tmpCopy = null;
+		try {
+			File originalJpeg = new File(originalImagePath);
+			if (!originalJpeg.exists()) {
+				throw new ImageTransformException("File does not exist " + originalImagePath);
+			}
+			
+			String originalFileName = originalJpeg.getName();
+			File thumb = GalleryUtils.getThumb(originalFileName, folderId, config.getStorePath());
+			File view = GalleryUtils.getView(originalFileName, folderId, config.getStorePath());
+
+			// rotate thumb
+			if (thumb != null) {
+				RuntimeExecutor.execute(genRotateCommand(thumb.getPath(), direction), 5);
+			}
+
+			// rotate view
+			if (view != null) {
+				RuntimeExecutor.execute(genRotateCommand(view.getPath(), direction), 5);
+			}
+
+			// copy original to tmp file
+			String tmpFilePath = FilenameUtils.concat(config.getTmpPath(), GalleryUtils.getTmpFileNameBase() + ".jpg");
+			tmpCopy = new File(tmpFilePath);
+			is = new FileInputStream(originalJpeg);
+			os = new FileOutputStream(tmpCopy);
+			IOUtils.copy(is, os);
+			IOUtils.closeQuietly(is);
+			IOUtils.closeQuietly(os);
+
+			// rotate original copy
+			RuntimeExecutor.execute(genRotateCommand(tmpFilePath, direction), 5);
+
+			// copy original back
+			is = new FileInputStream(tmpCopy);
+			os = new FileOutputStream(originalJpeg);
+			IOUtils.copy(is, os);
+			IOUtils.closeQuietly(is);
+			IOUtils.closeQuietly(os);
+
+			long executionTime = System.currentTimeMillis() - startTime;
+			log.debug("Finished to rotate " + originalImagePath + " (" + executionTime + "ms)");
+
+		} catch (RuntimeExecutorTimeoutException e) {
+			throw new ImageTransformException("Failed to rotate image", e);
+		} catch (FileNotFoundException e) {
+			throw new ImageTransformException("Failed to rotate image", e);
+		} catch (IOException e) {
+			throw new ImageTransformException("Failed to rotate image", e);
+		} finally {
+			IOUtils.closeQuietly(is);
+			IOUtils.closeQuietly(os);
+			if (tmpCopy != null) {
+				String tmpPath = tmpCopy.getPath();
+				try {
+					tmpCopy.delete();
+				} catch (Exception e) {
+					log.debug("Failed to delete tmp file " + tmpPath);
+				}
+			}
+		}
 	}
 
 	// -------------------------------------------------------------------------------------
@@ -135,7 +208,7 @@ public class ImagesTransformService {
 			File tmpCopy = null;
 			try {
 				File originalJpeg = new File(task.getSourceSrc());
-				String tmpFilePath = FilenameUtils.concat(config.getTmpPath(), System.currentTimeMillis() + ".jpg");
+				String tmpFilePath = FilenameUtils.concat(config.getTmpPath(), GalleryUtils.getTmpFileNameBase() + ".jpg");
 				tmpCopy = new File(tmpFilePath);
 				is = new FileInputStream(originalJpeg);
 				os = new FileOutputStream(tmpCopy);
