@@ -1,5 +1,7 @@
 package com.ss.gallery.server;
 
+import java.util.List;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
@@ -25,6 +27,17 @@ public class GalleryContext {
 	public void setLoggedInUser(String name, HttpServletRequest request) {
 		HttpSession session = request.getSession(true);
 		session.setAttribute(CURRENT_LOGGED_USER, name);
+	}
+
+	public GalleryUser findUserByName(String userName) {
+		List<GalleryUser> users = config.getUsers();
+		for (GalleryUser u : users) {
+			if (u.getName().equals(userName)) {
+				return u;
+			}
+		}
+		return null;
+
 	}
 
 }

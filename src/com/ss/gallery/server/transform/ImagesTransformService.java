@@ -98,34 +98,52 @@ public class ImagesTransformService {
 			File thumb = GalleryUtils.getThumb(originalFileName, folderId, config.getStorePath());
 			File view = GalleryUtils.getView(originalFileName, folderId, config.getStorePath());
 
-			// rotate thumb
-			if (thumb != null) {
-				RuntimeExecutor.execute(genRotateCommand(thumb.getPath(), direction), 5);
+			if (thumb == null || view == null) {
+				throw new ImageTransformException("Thumb or view does not exist yet for image " + originalImagePath);
 			}
 
-			// rotate view
-			if (view != null) {
-				RuntimeExecutor.execute(genRotateCommand(view.getPath(), direction), 5);
+			try {
+				// rotate thumb			
+				RuntimeExecutor.execute(genRotateCommand(thumb.getPath(), direction), 300);
+
+				// rotate view			
+				RuntimeExecutor.execute(genRotateCommand(view.getPath(), direction), 300);
+			} catch (RuntimeExecutorTimeoutException e) {
+				try {
+					thumb.delete();
+					view.delete();
+				} catch (Exception ee) {
+					log.error("Faile to remove thumb and view after rotate failure");
+				}
+				throw e;
+			} catch (IOException e) {
+				try {
+					thumb.delete();
+					view.delete();
+				} catch (Exception ee) {
+					log.error("Faile to remove thumb and view after rotate failure");
+				}
+				throw e;
 			}
 
 			// copy original to tmp file
-			String tmpFilePath = FilenameUtils.concat(config.getTmpPath(), GalleryUtils.getTmpFileNameBase() + ".jpg");
+			/*String tmpFilePath = FilenameUtils.concat(config.getTmpPath(), GalleryUtils.getTmpFileNameBase() + ".jpg");
 			tmpCopy = new File(tmpFilePath);
 			is = new FileInputStream(originalJpeg);
 			os = new FileOutputStream(tmpCopy);
 			IOUtils.copy(is, os);
 			IOUtils.closeQuietly(is);
-			IOUtils.closeQuietly(os);
+			IOUtils.closeQuietly(os);*/
 
 			// rotate original copy
-			RuntimeExecutor.execute(genRotateCommand(tmpFilePath, direction), 5);
+			//RuntimeExecutor.execute(genRotateCommand(tmpFilePath, direction), 300);
 
 			// copy original back
-			is = new FileInputStream(tmpCopy);
+			/*is = new FileInputStream(tmpCopy);
 			os = new FileOutputStream(originalJpeg);
 			IOUtils.copy(is, os);
 			IOUtils.closeQuietly(is);
-			IOUtils.closeQuietly(os);
+			IOUtils.closeQuietly(os);*/
 
 			long executionTime = System.currentTimeMillis() - startTime;
 			log.debug("Finished to rotate " + originalImagePath + " (" + executionTime + "ms)");

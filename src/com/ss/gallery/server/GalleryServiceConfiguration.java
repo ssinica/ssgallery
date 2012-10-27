@@ -35,6 +35,7 @@ public class GalleryServiceConfiguration implements ConfigurationListener {
 	private static final String APP_USER_PREFIX = "app.user.";
 	private static final String APP_USER_NAME = ".name";
 	private static final String APP_USER_PASS = ".pass";
+	private static final String APP_USER_ROLES = ".roles";
 
 	private static final String APP_ROOT_DIRS_PREFIX = "app.dir.root.";
 
@@ -249,8 +250,27 @@ public class GalleryServiceConfiguration implements ConfigurationListener {
 			String pathProp = APP_USER_PREFIX + currentIndex;
 			String name = pc.getString(pathProp + APP_USER_NAME, "").trim();
 			String pass = pc.getString(pathProp + APP_USER_PASS, "").trim();
+			String rolesValue = pc.getString(pathProp + APP_USER_ROLES, "").trim();
 			if (!StringUtils.isEmpty(name) || !StringUtils.isEmpty(pass)) {
-				users.add(new GalleryUser(name, pass));
+
+				Set<UserRole> roles = new HashSet<UserRole>();
+				if (!StringUtils.isEmpty(rolesValue)) {
+					try {
+						String[] rolesItems = rolesValue.split(",");
+						for (String roleItem : rolesItems) {
+							UserRole role = UserRole.getByRole(roleItem);
+							if (role != null) {
+								roles.add(role);
+							} else {
+								log.warn("Role " + roleItem + " is not supported");
+							}
+						}
+					} catch (Exception e) {
+						log.error("Failed to parse role " + rolesValue, e);
+					}
+				}
+
+				users.add(new GalleryUser(name, pass, roles));
 				log.info("Gallery user detected: " + name);
 			} else {
 				break;

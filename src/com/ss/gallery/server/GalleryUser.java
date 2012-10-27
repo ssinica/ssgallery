@@ -1,15 +1,26 @@
 package com.ss.gallery.server;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import org.apache.commons.lang.builder.ToStringBuilder;
 
 public class GalleryUser {
 
 	private String name;
 	private String pass;
+	private Set<UserRole> roles = new HashSet<UserRole>();
 
-	public GalleryUser(String name, String pass) {
+	public GalleryUser(String name, String pass, Set<UserRole> roles) {
 		this.name = name;
 		this.pass = pass;
+		if (roles != null) {
+			this.roles = roles;
+		}
+	}
+
+	public boolean hasRole(UserRole role) {
+		return roles.contains(role);
 	}
 
 	public String getName() {

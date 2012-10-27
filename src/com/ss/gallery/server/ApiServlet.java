@@ -73,14 +73,21 @@ public class ApiServlet extends HttpServlet {
 		String direction = ServerJsonHelper.getString("direction", json);
 
 		if (!"left".equals(direction) && !"right".equals(direction)) {
-			writeResponseData("{}", resp);
+			printError("Incorrect rotate direction", resp);
 			return;
 		}
 
 		ServerFolder folder = gs.getFolderById(folderId);
 
-		if (!GalleryUtils.canUserViewFolder(ctx.getLoggedInUser(req), folder)) {
-			writeResponseData("{}", resp);
+		String userName = ctx.getLoggedInUser(req);
+		if (!GalleryUtils.canUserViewFolder(userName, folder)) {
+			printError("You have no access to the folder " + folder.getCaption(), resp);
+			return;
+		}
+
+		GalleryUser user = ctx.findUserByName(userName);
+		if (user == null || !user.hasRole(UserRole.ADMIN)) {
+			printError("You have no rights to rotate images in this folder", resp);
 			return;
 		}
 

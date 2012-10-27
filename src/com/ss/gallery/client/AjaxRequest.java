@@ -52,11 +52,22 @@ public class AjaxRequest implements RequestCallback {
 		JSONObject data = null;
 		try {
 			data = JSONHelper.getJsonFromString(responseText);
+
+			JSONObject innerData = JSONHelper.getObject(data, "data");
+			if (innerData != null) {
+				String error = JSONHelper.getString(innerData, "error");
+				if (!GWTUtils.isEmpty(error)) {
+					Window.alert(error);
+					return;
+				}
+			}
+
+			callback.onResponse(data);
+
 		} catch (Exception e) {
 			Window.alert("Сервер прислал билебирду - ничего не понять :(");
 			return;
 		}
-		callback.onResponse(data);
 	}
 
 	/**
