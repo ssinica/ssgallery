@@ -143,7 +143,26 @@ body {
 	visibility: hidden;
 	opacity: 0;
 	min-height: 750px;
+	display: none;
 }
+.bf-w:-webkit-full-screen {    
+    display: block;        
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    width: 100% !important;
+    height: 100% !important;    
+    background-color: #333;
+    padding-top: 50px;
+}
+.bf-w:-moz-full-screen {
+    display: block;        
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    width: 100% !important;
+    height: 100% !important;    
+    background-color: #333;
+    padding-top: 50px;
+}	
 
 .bf-w__on {
 	visibility: visible;
@@ -208,6 +227,12 @@ body {
 /* Small photos */
 .sf-w {
 	margin: 0px; /* reset bootstrap default values */
+}
+:full-screen .sf-w {
+  display: none; 
+}
+:full-screen .sf-w {
+  display: none; 
 }
 
 .sf-w__center {

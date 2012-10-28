@@ -490,6 +490,9 @@ public class GalleryPanel extends Composite implements
 			String folderId = JSONHelper.getString(json, "folderId");
 			String imageId = JSONHelper.getString(json, "imageId");
 			History.newItem(folderId + "/" + imageId);
+
+			FullScreenHelper.startFullscreen(elBigPhotoW);
+
 		} else if (UID_SMALL_LEFT.equals(uid)) {
 			if (selectedFolder == null || GWTUtils.isEmpty(prevImageId)) {
 				Window.alert("No more images");
