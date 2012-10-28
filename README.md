@@ -1,4 +1,4 @@
-[ssgallery](http://ssinica.github.com/ssgallery/)
+[ssgallery](http://github.com/ssinica/ssgallery/)
 =========== 
 
 SSGallery is an HTTP server, which allows to share photo archives. 
