@@ -42,6 +42,10 @@ public class GalleryServlet extends HttpServlet {
 			jsonData.append("</div>");
 		}
 
+		// google analitics		
+		String gagTrack = "UA-35920539-2";
+		String gag = genGoogleAnaliticsScript(gagTrack);
+
 		Duration duration = new Duration();
 		resp.setCharacterEncoding("UTF8");
 		resp.addHeader("Pragma", "no-cache");
@@ -59,6 +63,7 @@ public class GalleryServlet extends HttpServlet {
 		sb.append("<link type=\"text/css\" rel=\"stylesheet\" href=\"main.css?v13\">");
 		sb.append("<title>SSGallery</title>");
 		sb.append("<script type=\"text/javascript\" language=\"javascript\" src=\"gallery/gallery.nocache.js\"></script>");
+		sb.append(gag);
 		sb.append("</head>");
 		sb.append("<body>");
 		sb.append(jsonData.toString());
@@ -74,6 +79,21 @@ public class GalleryServlet extends HttpServlet {
 		wr.print(sb.toString());
 	}
 
+	private String genGoogleAnaliticsScript(String trackingCode) {
+		StringBuilder sb = new StringBuilder();
+		sb.append("<script type='text/javascript'>");
+		sb.append("var _gaq = _gaq || [];");
+		sb.append("_gaq.push(['_setAccount', '" + trackingCode + "']);");
+		//sb.append("_gaq.push(['_setDomainName', '" + domainName + "']);");
+		sb.append("_gaq.push(['_trackPageview']);");
+		sb.append("(function() {");
+		sb.append("var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;");
+		sb.append("ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';");
+		sb.append("var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);");
+		sb.append("})();");
+		sb.append("</script>");
+		return sb.toString();
+	}
 
 
 }

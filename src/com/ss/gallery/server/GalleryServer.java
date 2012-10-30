@@ -59,9 +59,9 @@ public class GalleryServer implements WrapperListener {
 		handlerList.addHandler(servletsHandler);
 
 		servletsHandler.addServlet(new ServletHolder(new NoCacheJsServlet(ctx)), "/gallery/gallery.nocache.js");
-		servletsHandler.addServlet(new ServletHolder(new GalleryServlet(gs, ctx)), "/photos");
 		servletsHandler.addServlet(new ServletHolder(new ImageServlet(gs, ctx)), "/images");
 		servletsHandler.addServlet(new ServletHolder(new ApiServlet(gs, ctx)), "/api");
+		servletsHandler.addServlet(new ServletHolder(new GalleryServlet(gs, ctx)), "/photos");
 		
 		String warDir = config.getWar();
 		ResourceHandler rsHandler = new ResourceHandler();
